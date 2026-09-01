@@ -909,6 +909,9 @@ function gerarId(lista) {
     return lista.length ? Math.max(...lista.map(i => i.id || 0)) + 1 : 1;
 }
 function findById(lista, id) { return lista.find(i => i.id === id); }
+function isNumeroValido(val) {
+    return !isNaN(val) && val !== null && val !== undefined && val !== '';
+}
 function formatDate(iso) {
     if (!iso) return '-';
     const d = new Date(iso);
@@ -1171,13 +1174,17 @@ function renderizarCalendario() {
 //  AGENDAMENTOS (CRUD)
 // ============================================================
 function abrirModalAgendamento(data) {
+    // Limpa o formulário
     document.getElementById('formAgendamento').reset();
     document.getElementById('agendamentoId').value = '';
     document.getElementById('modalAgendamentoTitulo').textContent = 'Novo Agendamento';
+
+    // Preenche os selects (ordem importante)
     preencherSelectClientes('agCliente');
     preencherSelectVeiculos('agVeiculo');
     preencherSelectMecanicos('agMecanico');
     preencherSelectServicosMulti('agServicos');
+
     if (data) {
         document.getElementById('modalAgendamentoTitulo').textContent = 'Editar Agendamento';
         document.getElementById('agendamentoId').value = data.id;
@@ -1191,7 +1198,8 @@ function abrirModalAgendamento(data) {
         for (let opt of servSelect.options) opt.selected = (data.servicos || []).includes(parseInt(opt.value));
     } else {
         document.getElementById('agStatus').value = 'pendente';
-        const now = new Date(); now.setHours(now.getHours() + 1);
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
         document.getElementById('agDataHora').value = now.toISOString().slice(0,16);
     }
     abrirModal('modalAgendamento');
@@ -1204,53 +1212,52 @@ function editarAgendamento(id) {
 
 // ===== VALIDAÇÕES =====
 function validarDataHora(dataHora) {
+    if (!dataHora) {
+        showToast('Data e hora são obrigatórias.', 'error');
+        return false;
+    }
     const selected = new Date(dataHora);
     const now = new Date();
-    if (selected < now) {
-        showToast('A data/hora não pode ser no passado.', 'error');
+    const diff = (selected - now) / 60000;
+    if (diff < -1) {
+        showToast('A data/hora não pode ser no passado. Escolha um horário futuro.', 'error');
         return false;
     }
     const hora = selected.getHours();
-    if (hora < 8 || hora >= 18) {
-        showToast('Horário deve estar entre 08:00 e 18:00.', 'error');
+    const minuto = selected.getMinutes();
+    if (hora < 8 || hora >= 18 || (hora === 17 && minuto > 30)) {
+        showToast('Horário deve estar entre 08:00 e 17:30 (último agendamento às 17:30).', 'error');
         return false;
     }
     return true;
 }
 
-// ===== VALIDAÇÃO DE PLACA (FLEXÍVEL) =====
 function validarPlaca(placa, idIgnorar = null) {
-    // Remove espaços, hífens e converte para maiúsculas
-    let p = placa.replace(/[\s-]/g, '').toUpperCase();
-    
+    let p = placa.replace(/[\s\-\.]/g, '').toUpperCase();
     if (p.length !== 7) {
-        showToast('A placa deve ter exatamente 7 caracteres (ex: AAA-0000 ou ABC1D23).', 'error');
+        showToast(`A placa deve ter exatamente 7 caracteres (você digitou ${p.length}). Ex: AAA-0000 ou ABC1D23.`, 'error');
         return false;
     }
-    
-    // Verifica se são apenas letras e números
     if (!/^[A-Z0-9]{7}$/.test(p)) {
-        showToast('Placa inválida. Use apenas letras e números.', 'error');
+        showToast('Placa inválida. Use apenas letras e números, sem caracteres especiais.', 'error');
         return false;
     }
-    
-    // Verifica duplicidade (ignorando o próprio veículo em edição)
     const veiculos = DB.veiculos.get();
     const duplicado = veiculos.some(v => {
-        const vPlaca = v.placa.replace(/[\s-]/g, '').toUpperCase();
+        const vPlaca = v.placa.replace(/[\s\-\.]/g, '').toUpperCase();
         return vPlaca === p && v.id !== idIgnorar;
     });
     if (duplicado) {
         showToast('Esta placa já está cadastrada para outro veículo.', 'error');
         return false;
     }
-    
     return true;
 }
 
 function validarTelefone(tel) {
+    if (!tel) return true;
     const regex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
-    if (tel && !regex.test(tel)) {
+    if (!regex.test(tel)) {
         showToast('Telefone inválido. Use o formato (11) 99999-9999.', 'error');
         return false;
     }
@@ -1274,9 +1281,10 @@ function verificarConflito(mecanicoId, dataHora, duracao, agendamentoIdIgnorar =
     return conflito;
 }
 
-// ===== SALVAR AGENDAMENTO =====
+// ===== SALVAR AGENDAMENTO (CORRIGIDO) =====
 function salvarAgendamento(e) {
     e.preventDefault();
+
     const id = document.getElementById('agendamentoId').value;
     const clienteId = parseInt(document.getElementById('agCliente').value);
     const veiculoId = parseInt(document.getElementById('agVeiculo').value);
@@ -1286,12 +1294,23 @@ function salvarAgendamento(e) {
     const observacoes = document.getElementById('agObservacoes').value;
     const servicos = Array.from(document.getElementById('agServicos').selectedOptions).map(o => parseInt(o.value));
 
-    if (!clienteId || !veiculoId || !dataHora) {
-        showToast('Preencha cliente, veículo e data/hora.', 'error');
-        return;
+    // --- VALIDAÇÕES ESPECÍFICAS ---
+    let erro = false;
+    if (!isNumeroValido(clienteId)) {
+        showToast('Selecione um cliente válido.', 'error');
+        erro = true;
     }
+    if (!isNumeroValido(veiculoId)) {
+        showToast('Selecione um veículo válido.', 'error');
+        erro = true;
+    }
+    if (!dataHora || dataHora === '') {
+        showToast('Preencha a data e hora.', 'error');
+        erro = true;
+    }
+    if (erro) return;
 
-    // Validações
+    // --- VALIDAÇÕES ADICIONAIS ---
     if (!validarDataHora(dataHora)) return;
 
     // Duração total dos serviços
@@ -1303,6 +1322,7 @@ function salvarAgendamento(e) {
         return;
     }
 
+    // --- SALVAR ---
     const ags = DB.agendamentos.get();
     if (id) {
         const idx = ags.findIndex(a => a.id === parseInt(id));
@@ -1384,7 +1404,6 @@ function imprimirAgendaDoDia() {
         html += `</tbody></table>`;
         printArea.innerHTML = html;
     }
-    // Exibir área de impressão e imprimir
     document.getElementById('print-area').style.display = 'block';
     setTimeout(() => {
         window.print();
@@ -1517,20 +1536,18 @@ function editarVeiculo(id) { const v = findById(DB.veiculos.get(), id); if (v) a
 function salvarVeiculo(e) {
     e.preventDefault();
     const id = document.getElementById('veiculoId').value;
-    let placa = document.getElementById('veiPlaca').value.trim().toUpperCase();
+    let placa = document.getElementById('veiPlaca').value.trim();
     
-    // Valida a placa (passando o ID para ignorar na duplicidade)
     if (!validarPlaca(placa, id ? parseInt(id) : null)) return;
     
-    // Normaliza: remove espaços e hífens, mantém 7 caracteres
-    const placaNormalizada = placa.replace(/[\s-]/g, '');
+    const placaNormalizada = placa.replace(/[\s\-\.]/g, '').toUpperCase();
     
     const clienteId = parseInt(document.getElementById('veiCliente').value);
     if (!clienteId) { showToast('Selecione um cliente.', 'error'); return; }
     
     const list = DB.veiculos.get();
     const obj = {
-        placa: placaNormalizada, // armazena sem hífen
+        placa: placaNormalizada,
         clienteId,
         modelo: document.getElementById('veiModelo').value,
         marca: document.getElementById('veiMarca').value,
@@ -1791,9 +1808,8 @@ renderMecanicos();
 renderServicos();
 renderMeusAgendamentos();
 renderLembretesLog();
-// O calendário será renderizado quando a aba for acessada
 
-console.log('🔧 Sistema de Oficina com placa flexível e todas as melhorias ativado!');
+console.log('🔧 Sistema de Oficina com todas as correções ativado!');
 </script>
 </body>
 </html>
