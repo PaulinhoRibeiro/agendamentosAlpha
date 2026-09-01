@@ -757,7 +757,7 @@
             <input type="hidden" id="veiculoId" />
             <div class="form-group"><label><i class="fas fa-user"></i> Cliente</label><select id="veiCliente" required></select></div>
             <div class="form-row">
-                <div class="form-group"><label><i class="fas fa-id-card"></i> Placa (AAA-0000)</label><input id="veiPlaca" placeholder="AAA-0000" required /></div>
+                <div class="form-group"><label><i class="fas fa-id-card"></i> Placa (ex: AAA-0000 ou ABC1D23)</label><input id="veiPlaca" placeholder="AAA-0000" required /></div>
                 <div class="form-group"><label><i class="fas fa-car"></i> Modelo</label><input id="veiModelo" /></div>
             </div>
             <div class="form-row">
@@ -865,8 +865,8 @@ function initDados() {
     }
     if (DB.veiculos.get().length === 0) {
         DB.veiculos.set([
-            { id: 1, placa: 'ABC-1234', modelo: 'Civic', marca: 'Honda', ano: 2020, cor: 'Prata', km: 15000, clienteId: 1, obs: '' },
-            { id: 2, placa: 'XYZ-5678', modelo: 'Gol', marca: 'VW', ano: 2018, cor: 'Branco', km: 45000, clienteId: 2, obs: '' },
+            { id: 1, placa: 'ABC1234', modelo: 'Civic', marca: 'Honda', ano: 2020, cor: 'Prata', km: 15000, clienteId: 1, obs: '' },
+            { id: 2, placa: 'XYZ5678', modelo: 'Gol', marca: 'VW', ano: 2018, cor: 'Branco', km: 45000, clienteId: 2, obs: '' },
         ]);
     }
     if (DB.mecanicos.get().length === 0) {
@@ -1218,12 +1218,33 @@ function validarDataHora(dataHora) {
     return true;
 }
 
-function validarPlaca(placa) {
-    const regex = /^[A-Z]{3}-\d{4}$/;
-    if (!regex.test(placa)) {
-        showToast('Placa inválida. Use o formato AAA-0000.', 'error');
+// ===== VALIDAÇÃO DE PLACA (FLEXÍVEL) =====
+function validarPlaca(placa, idIgnorar = null) {
+    // Remove espaços, hífens e converte para maiúsculas
+    let p = placa.replace(/[\s-]/g, '').toUpperCase();
+    
+    if (p.length !== 7) {
+        showToast('A placa deve ter exatamente 7 caracteres (ex: AAA-0000 ou ABC1D23).', 'error');
         return false;
     }
+    
+    // Verifica se são apenas letras e números
+    if (!/^[A-Z0-9]{7}$/.test(p)) {
+        showToast('Placa inválida. Use apenas letras e números.', 'error');
+        return false;
+    }
+    
+    // Verifica duplicidade (ignorando o próprio veículo em edição)
+    const veiculos = DB.veiculos.get();
+    const duplicado = veiculos.some(v => {
+        const vPlaca = v.placa.replace(/[\s-]/g, '').toUpperCase();
+        return vPlaca === p && v.id !== idIgnorar;
+    });
+    if (duplicado) {
+        showToast('Esta placa já está cadastrada para outro veículo.', 'error');
+        return false;
+    }
+    
     return true;
 }
 
@@ -1455,7 +1476,7 @@ function excluirCliente(id) {
 }
 
 // ============================================================
-//  VEÍCULOS (CRUD com validação de placa)
+//  VEÍCULOS (CRUD com validação de placa flexível)
 // ============================================================
 function renderVeiculos() {
     const list = DB.veiculos.get();
@@ -1496,14 +1517,36 @@ function editarVeiculo(id) { const v = findById(DB.veiculos.get(), id); if (v) a
 function salvarVeiculo(e) {
     e.preventDefault();
     const id = document.getElementById('veiculoId').value;
-    const placa = document.getElementById('veiPlaca').value.trim().toUpperCase();
-    if (!validarPlaca(placa)) return;
+    let placa = document.getElementById('veiPlaca').value.trim().toUpperCase();
+    
+    // Valida a placa (passando o ID para ignorar na duplicidade)
+    if (!validarPlaca(placa, id ? parseInt(id) : null)) return;
+    
+    // Normaliza: remove espaços e hífens, mantém 7 caracteres
+    const placaNormalizada = placa.replace(/[\s-]/g, '');
+    
     const clienteId = parseInt(document.getElementById('veiCliente').value);
     if (!clienteId) { showToast('Selecione um cliente.', 'error'); return; }
+    
     const list = DB.veiculos.get();
-    const obj = { placa, clienteId, modelo: document.getElementById('veiModelo').value, marca: document.getElementById('veiMarca').value, ano: parseInt(document.getElementById('veiAno').value) || null, cor: document.getElementById('veiCor').value, km: parseInt(document.getElementById('veiKm').value) || null, obs: document.getElementById('veiObs').value };
-    if (id) { const idx = list.findIndex(v => v.id === parseInt(id)); if (idx !== -1) list[idx] = { ...list[idx], ...obj }; }
-    else { obj.id = gerarId(list); list.push(obj); }
+    const obj = {
+        placa: placaNormalizada, // armazena sem hífen
+        clienteId,
+        modelo: document.getElementById('veiModelo').value,
+        marca: document.getElementById('veiMarca').value,
+        ano: parseInt(document.getElementById('veiAno').value) || null,
+        cor: document.getElementById('veiCor').value,
+        km: parseInt(document.getElementById('veiKm').value) || null,
+        obs: document.getElementById('veiObs').value
+    };
+    
+    if (id) {
+        const idx = list.findIndex(v => v.id === parseInt(id));
+        if (idx !== -1) list[idx] = { ...list[idx], ...obj };
+    } else {
+        obj.id = gerarId(list);
+        list.push(obj);
+    }
     DB.veiculos.set(list);
     fecharModal('modalVeiculo');
     renderVeiculos();
@@ -1748,9 +1791,9 @@ renderMecanicos();
 renderServicos();
 renderMeusAgendamentos();
 renderLembretesLog();
-// Calendário será renderizado quando a página for acessada
+// O calendário será renderizado quando a aba for acessada
 
-console.log('🔧 Sistema de Oficina com todas as melhorias ativado!');
+console.log('🔧 Sistema de Oficina com placa flexível e todas as melhorias ativado!');
 </script>
 </body>
 </html>
