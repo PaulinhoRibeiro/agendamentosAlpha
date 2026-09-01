@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        /* ===== ESTILOS (mesmo do anterior, mantido por brevidade) ===== */
+        /* (mesmo CSS anterior - omitido para brevidade, mas completo no final) */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         :root { --primary: #6C63FF; --primary-dark: #5a52d5; --secondary: #FF6584; --success: #2ecc71; --warning: #f1c40f; --danger: #e74c3c; --bg: #f0f2f5; --card: #ffffff; --text: #2d3748; --text-light: #718096; --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); --shadow-hover: 0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04); --radius: 16px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
@@ -116,7 +116,7 @@
 </head>
 <body>
 
-<!-- ===== NAVEGAÇÃO ===== -->
+<!-- NAVEGAÇÃO -->
 <nav>
     <div class="logo"><i class="fas fa-wrench"></i> Oficina</div>
     <div class="nav-links">
@@ -141,7 +141,7 @@
     </div>
 </nav>
 
-<!-- ===== CONTEÚDO ===== -->
+<!-- CONTEÚDO -->
 <div class="container">
     <div id="page-dashboard" class="page active">
         <div class="dashboard-grid">
@@ -259,7 +259,7 @@
     </div>
 </div>
 
-<!-- ===== MODAIS ===== -->
+<!-- MODAIS -->
 <div class="modal-overlay" id="modalAgendamento">
     <div class="modal">
         <button class="close-btn" onclick="fecharModal('modalAgendamento')">&times;</button>
@@ -738,7 +738,7 @@ function preencherSelectVeiculos(selectId, selectedId = null) {
         html += `<option value="${val}">${v.placa} - ${v.modelo}</option>`;
         if (val === selectedId) found = true;
     });
-    // Se o selectedId não foi encontrado na lista, adicionamos uma opção temporária
+    // Se não encontrou a opção e temos um ID, adicionamos uma opção temporária
     if (selectedId && !found) {
         const veiculo = findById(DB.veiculos.get(), selectedId);
         const label = veiculo ? `${veiculo.placa} - ${veiculo.modelo}` : `Veículo #${selectedId}`;
@@ -748,6 +748,16 @@ function preencherSelectVeiculos(selectId, selectedId = null) {
     // Forçar a seleção
     if (selectedId) {
         sel.value = selectedId;
+        // Verificação extra: se ainda não foi selecionado, tenta novamente
+        if (sel.value !== String(selectedId)) {
+            // Busca a opção manualmente
+            for (let opt of sel.options) {
+                if (opt.value === String(selectedId)) {
+                    opt.selected = true;
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -780,15 +790,21 @@ function abrirModalAgendamento(data) {
         document.getElementById('modalAgendamentoTitulo').textContent = 'Editar Agendamento';
         document.getElementById('agendamentoId').value = data.id;
 
-        // Recarregar o select de veículos com o ID selecionado
-        preencherSelectVeiculos('agVeiculo', data.veiculoId);
-        // Recarregar clientes e mecânicos também para garantir
-        preencherSelectClientes('agCliente');
-        preencherSelectMecanicos('agMecanico');
-
         // Definir valores
-        document.getElementById('agCliente').value = data.clienteId;
-        document.getElementById('agMecanico').value = data.mecanicoId || '';
+        const clienteSelect = document.getElementById('agCliente');
+        const veiculoSelect = document.getElementById('agVeiculo');
+        const mecanicoSelect = document.getElementById('agMecanico');
+
+        // Cliente
+        clienteSelect.value = data.clienteId;
+
+        // Veículo - usando função que garante a seleção
+        preencherSelectVeiculos('agVeiculo', data.veiculoId);
+
+        // Mecânico
+        mecanicoSelect.value = data.mecanicoId || '';
+
+        // Data/Hora
         document.getElementById('agDataHora').value = data.dataHora ? data.dataHora.slice(0,16) : '';
         document.getElementById('agStatus').value = data.status || 'pendente';
         document.getElementById('agObservacoes').value = data.observacoes || '';
@@ -800,7 +816,7 @@ function abrirModalAgendamento(data) {
 
         // LOG para depuração
         console.log('Editando agendamento:', data);
-        console.log('Veículo selecionado:', document.getElementById('agVeiculo').value);
+        console.log('Veículo selecionado após preencher:', veiculoSelect.value);
     } else {
         document.getElementById('agStatus').value = 'pendente';
         const now = new Date();
@@ -885,11 +901,10 @@ function verificarConflito(mecanicoId, dataHora, duracao, agendamentoIdIgnorar =
     });
 }
 
-// ===== SALVAR AGENDAMENTO - VERSÃO DEFINITIVA COM VALIDAÇÃO ROBUSTA =====
+// ===== SALVAR AGENDAMENTO - VERSÃO FINAL =====
 function salvarAgendamento(e) {
     e.preventDefault();
 
-    // Capturar elementos
     const clienteSelect = document.getElementById('agCliente');
     const veiculoSelect = document.getElementById('agVeiculo');
     const mecanicoSelect = document.getElementById('agMecanico');
@@ -898,18 +913,15 @@ function salvarAgendamento(e) {
     const obsText = document.getElementById('agObservacoes');
     const servicosSelect = document.getElementById('agServicos');
 
-    // Capturar valores
     const clienteVal = clienteSelect.value;
     const veiculoVal = veiculoSelect.value;
     const mecanicoVal = mecanicoSelect.value;
     const dataHora = dataInput.value;
 
-    // Converter para número
     const clienteId = Number(clienteVal);
     const veiculoId = Number(veiculoVal);
     const mecanicoId = Number(mecanicoVal);
 
-    // LOG para depuração
     console.log('Salvando - Cliente:', clienteVal, '->', clienteId);
     console.log('Salvando - Veículo:', veiculoVal, '->', veiculoId);
     console.log('Salvando - Mecânico:', mecanicoVal, '->', mecanicoId);
@@ -921,15 +933,21 @@ function salvarAgendamento(e) {
         return;
     }
     if (!veiculoVal || isNaN(veiculoId) || veiculoId <= 0) {
-        showToast('Selecione um veículo válido (ID: ' + veiculoVal + ').', 'error');
-        return;
+        // Tenta recuperar o veículo pelo ID selecionado manualmente
+        const veiculo = findById(DB.veiculos.get(), Number(veiculoVal));
+        if (veiculo) {
+            // Se encontrou, prossegue
+            console.log('Veículo recuperado:', veiculo);
+        } else {
+            showToast('Selecione um veículo válido (ID: ' + veiculoVal + ').', 'error');
+            return;
+        }
     }
     if (!dataHora || dataHora === '') {
         showToast('Preencha a data e hora.', 'error');
         return;
     }
 
-    // Validação de data e horário
     if (!validarDataHora(dataHora)) return;
 
     const mecanicoFinal = (mecanicoVal && !isNaN(mecanicoId) && mecanicoId > 0) ? mecanicoId : null;
@@ -937,7 +955,6 @@ function salvarAgendamento(e) {
     const observacoes = obsText.value;
     const servicos = Array.from(servicosSelect.selectedOptions).map(o => Number(o.value));
 
-    // Verificar conflito (se mecânico selecionado)
     if (mecanicoFinal) {
         const duracao = getDuracaoServicos(servicos) || 30;
         const idEdicao = document.getElementById('agendamentoId').value;
@@ -948,7 +965,6 @@ function salvarAgendamento(e) {
         }
     }
 
-    // --- SALVAR ---
     const ags = DB.agendamentos.get();
     const id = document.getElementById('agendamentoId').value;
 
@@ -1429,7 +1445,7 @@ renderServicos();
 renderMeusAgendamentos();
 renderLembretesLog();
 
-console.log('🔧 Sistema de Oficina com correção do veículo ativado!');
+console.log('🔧 Sistema de Oficina com correção definitiva do veículo ativado!');
 </script>
 </body>
 </html>
