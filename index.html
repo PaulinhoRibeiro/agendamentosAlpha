@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🔧 Oficina - Sistema de Agendamentos</title>
 
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- FullCalendar -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        /* ===== RESET E VARIÁVEIS (mesmo estilo anterior) ===== */
+        /* ===== RESET E VARIÁVEIS ===== */
         * {
             margin: 0;
             padding: 0;
@@ -47,7 +44,6 @@
         ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
-        /* ===== NAVEGAÇÃO (mesmo) ===== */
         nav {
             background: var(--card);
             box-shadow: var(--shadow);
@@ -130,7 +126,6 @@
             color: white; font-weight: 700; font-size: 1rem;
         }
 
-        /* ===== CONTEÚDO (mesmo) ===== */
         .container {
             flex: 1;
             padding: 1.8rem 2rem;
@@ -148,7 +143,6 @@
             100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== CARDS (mesmo) ===== */
         .card {
             background: var(--card);
             border-radius: var(--radius);
@@ -175,7 +169,6 @@
         }
         .card-header h2 i { color: var(--primary); font-size: 1.5rem; }
 
-        /* ===== BOTÕES (mesmo) ===== */
         .btn {
             background: var(--primary);
             color: white;
@@ -236,7 +229,6 @@
             gap: 4px;
         }
 
-        /* ===== TABELAS (mesmo) ===== */
         .table-responsive { overflow-x: auto; border-radius: 12px; }
         table {
             width: 100%;
@@ -264,7 +256,6 @@
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #fafbff; }
 
-        /* ===== BADGES (mesmo) ===== */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -283,7 +274,6 @@
         .status-concluido { background: #d1fae5; color: #065f46; }
         .status-cancelado { background: #fee2e2; color: #7f1d1d; }
 
-        /* ===== FORMULÁRIOS (mesmo) ===== */
         .form-group { margin-bottom: 1.2rem; }
         .form-group label {
             display: block;
@@ -316,7 +306,6 @@
             gap: 1.2rem;
         }
 
-        /* ===== FILTROS (mesmo) ===== */
         .filtros-row {
             display: flex;
             flex-wrap: wrap;
@@ -328,7 +317,6 @@
             margin-bottom: 0;
         }
 
-        /* ===== MODAIS (mesmo) ===== */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -380,7 +368,6 @@
         }
         .modal .close-btn:hover { color: var(--text); transform: rotate(90deg); }
 
-        /* ===== DASHBOARD (mesmo) ===== */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -447,7 +434,6 @@
         .chart-box:hover { box-shadow: var(--shadow-hover); }
         .chart-box canvas { max-height: 240px; width: 100% !important; }
 
-        /* ===== TOASTS (mesmo) ===== */
         .toast-container {
             position: fixed;
             bottom: 20px;
@@ -491,7 +477,6 @@
             100% { transform: translateX(0); opacity: 1; }
         }
 
-        /* ===== CALENDÁRIO (mesmo) ===== */
         #calendar {
             max-width: 1100px;
             margin: 0 auto;
@@ -499,7 +484,6 @@
         .fc-event-title { font-weight: 600; }
         .fc-daygrid-event { border-radius: 4px; }
 
-        /* ===== IMPRESSÃO (mesmo) ===== */
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
@@ -514,13 +498,11 @@
             .no-print { display: none !important; }
         }
 
-        /* ===== UTILITÁRIOS (mesmo) ===== */
         .text-muted { color: var(--text-light); font-size: 0.85rem; }
         .flex { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
         .mt-2 { margin-top: 1rem; }
         .mb-1 { margin-bottom: 0.5rem; }
 
-        /* ===== RESPONSIVIDADE (mesmo) ===== */
         @media (max-width: 768px) {
             nav { flex-direction: column; align-items: stretch; gap: 0.6rem; padding: 0.8rem 1rem; }
             nav .nav-links { justify-content: center; gap: 0.2rem; }
@@ -571,7 +553,6 @@
 <!-- ===== CONTEÚDO ===== -->
 <div class="container">
 
-    <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
         <div class="dashboard-grid">
             <div class="stat-card"><div class="number" id="statTotal">0</div><div class="label">Total Agend.</div><i class="fas fa-calendar-alt icon"></i></div>
@@ -584,7 +565,6 @@
         </div>
     </div>
 
-    <!-- AGENDAMENTOS (com filtros) -->
     <div id="page-agendamentos" class="page">
         <div class="card">
             <div class="card-header">
@@ -594,7 +574,6 @@
                     <button class="btn" onclick="abrirModalAgendamento()"><i class="fas fa-plus"></i> Novo</button>
                 </div>
             </div>
-            <!-- Filtros -->
             <div class="filtros-row">
                 <div class="form-group">
                     <label><i class="fas fa-tag"></i> Status</label>
@@ -637,7 +616,6 @@
         </div>
     </div>
 
-    <!-- CALENDÁRIO -->
     <div id="page-calendario" class="page">
         <div class="card">
             <div class="card-header">
@@ -648,7 +626,6 @@
         </div>
     </div>
 
-    <!-- CLIENTES -->
     <div id="page-clientes" class="page">
         <div class="card">
             <div class="card-header">
@@ -659,7 +636,6 @@
         </div>
     </div>
 
-    <!-- VEÍCULOS -->
     <div id="page-veiculos" class="page">
         <div class="card">
             <div class="card-header"><h2><i class="fas fa-car"></i> Veículos</h2><button class="btn" onclick="abrirModalVeiculo()"><i class="fas fa-plus"></i> Novo</button></div>
@@ -667,7 +643,6 @@
         </div>
     </div>
 
-    <!-- MECÂNICOS -->
     <div id="page-mecanicos" class="page">
         <div class="card">
             <div class="card-header"><h2><i class="fas fa-user-cog"></i> Mecânicos</h2><button class="btn" onclick="abrirModalMecanico()"><i class="fas fa-plus"></i> Novo</button></div>
@@ -675,7 +650,6 @@
         </div>
     </div>
 
-    <!-- SERVIÇOS -->
     <div id="page-servicos" class="page">
         <div class="card">
             <div class="card-header"><h2><i class="fas fa-tools"></i> Serviços</h2><button class="btn" onclick="abrirModalServico()"><i class="fas fa-plus"></i> Novo</button></div>
@@ -683,7 +657,6 @@
         </div>
     </div>
 
-    <!-- MEUS AGENDAMENTOS -->
     <div id="page-meus-agendamentos" class="page">
         <div class="card">
             <div class="card-header"><h2><i class="fas fa-calendar-day"></i> Meus Agendamentos</h2><span class="text-muted" id="meuNomeMecanico"></span></div>
@@ -691,7 +664,6 @@
         </div>
     </div>
 
-    <!-- LEMBRETES LOG -->
     <div id="page-lembretes-log" class="page">
         <div class="card">
             <div class="card-header"><h2><i class="fas fa-bell"></i> Log de Lembretes</h2></div>
@@ -701,9 +673,7 @@
 
 </div>
 
-<!-- ===== MODAIS (mesmo conteúdo) ===== -->
-
-<!-- MODAL AGENDAMENTO -->
+<!-- ===== MODAIS ===== -->
 <div class="modal-overlay" id="modalAgendamento">
     <div class="modal">
         <button class="close-btn" onclick="fecharModal('modalAgendamento')">&times;</button>
@@ -732,7 +702,6 @@
     </div>
 </div>
 
-<!-- MODAL CLIENTE -->
 <div class="modal-overlay" id="modalCliente">
     <div class="modal">
         <button class="close-btn" onclick="fecharModal('modalCliente')">&times;</button>
@@ -750,7 +719,6 @@
     </div>
 </div>
 
-<!-- MODAL VEÍCULO -->
 <div class="modal-overlay" id="modalVeiculo">
     <div class="modal">
         <button class="close-btn" onclick="fecharModal('modalVeiculo')">&times;</button>
@@ -776,7 +744,6 @@
     </div>
 </div>
 
-<!-- MODAL MECÂNICO -->
 <div class="modal-overlay" id="modalMecanico">
     <div class="modal">
         <button class="close-btn" onclick="fecharModal('modalMecanico')">&times;</button>
@@ -794,7 +761,6 @@
     </div>
 </div>
 
-<!-- MODAL SERVIÇO -->
 <div class="modal-overlay" id="modalServico">
     <div class="modal">
         <button class="close-btn" onclick="fecharModal('modalServico')">&times;</button>
@@ -812,7 +778,6 @@
     </div>
 </div>
 
-<!-- MODAL HISTÓRICO -->
 <div class="modal-overlay" id="modalHistorico">
     <div class="modal" style="max-width: 700px;">
         <button class="close-btn" onclick="fecharModal('modalHistorico')">&times;</button>
@@ -823,19 +788,17 @@
     </div>
 </div>
 
-<!-- ÁREA DE IMPRESSÃO -->
 <div id="print-area" style="display:none;">
     <h2>Agenda do Dia</h2>
     <div id="print-conteudo"></div>
 </div>
 
-<!-- TOASTS -->
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- ============================================================ -->
 <script>
 // ============================================================
-//  DATA STORE (localStorage)
+//  DATA STORE
 // ============================================================
 const DB = {
     get(key, defaultVal = []) {
@@ -911,9 +874,6 @@ function gerarId(lista) {
     return lista.length ? Math.max(...lista.map(i => i.id || 0)) + 1 : 1;
 }
 function findById(lista, id) { return lista.find(i => i.id === id); }
-function isNumeroValido(val) {
-    return !isNaN(val) && val !== null && val !== undefined && val !== '';
-}
 function formatDate(iso) {
     if (!iso) return '-';
     const d = new Date(iso);
@@ -1173,15 +1133,13 @@ function renderizarCalendario() {
 }
 
 // ============================================================
-//  AGENDAMENTOS (CRUD) - CORRIGIDO COM LOGS E VALIDAÇÕES EXPLÍCITAS
+//  AGENDAMENTOS (CRUD) - CORRIGIDO COM VALIDAÇÃO PASSO A PASSO
 // ============================================================
 function abrirModalAgendamento(data) {
-    // Limpa o formulário
     document.getElementById('formAgendamento').reset();
     document.getElementById('agendamentoId').value = '';
     document.getElementById('modalAgendamentoTitulo').textContent = 'Novo Agendamento';
 
-    // Preenche os selects
     preencherSelectClientes('agCliente');
     preencherSelectVeiculos('agVeiculo');
     preencherSelectMecanicos('agMecanico');
@@ -1202,10 +1160,7 @@ function abrirModalAgendamento(data) {
         document.getElementById('agStatus').value = 'pendente';
         const now = new Date();
         now.setHours(now.getHours() + 1);
-        // Garante que o valor seja definido
-        const dataStr = now.toISOString().slice(0,16);
-        document.getElementById('agDataHora').value = dataStr;
-        console.log('Data/Hora definida como:', dataStr);
+        document.getElementById('agDataHora').value = now.toISOString().slice(0,16);
     }
     abrirModal('modalAgendamento');
 }
@@ -1269,13 +1224,13 @@ function validarTelefone(tel) {
     return true;
 }
 
-// ===== CONFLITO DE HORÁRIO =====
 function verificarConflito(mecanicoId, dataHora, duracao, agendamentoIdIgnorar = null) {
+    if (!mecanicoId) return false;
     const ags = DB.agendamentos.get();
     const inicio = new Date(dataHora);
     const fim = new Date(inicio.getTime() + duracao * 60000);
 
-    const conflito = ags.some(a => {
+    return ags.some(a => {
         if (a.id === agendamentoIdIgnorar) return false;
         if (a.mecanicoId !== mecanicoId) return false;
         if (a.status === 'cancelado' || a.status === 'concluido') return false;
@@ -1283,86 +1238,119 @@ function verificarConflito(mecanicoId, dataHora, duracao, agendamentoIdIgnorar =
         const aFim = new Date(aInicio.getTime() + (getDuracaoServicos(a.servicos) || 30) * 60000);
         return (inicio < aFim && fim > aInicio);
     });
-    return conflito;
 }
 
-// ===== SALVAR AGENDAMENTO (CORRIGIDO) =====
+// ===== SALVAR AGENDAMENTO - REESCRITO COM VALIDAÇÕES DIRETAS =====
 function salvarAgendamento(e) {
     e.preventDefault();
 
-    // Capturar valores
-    const id = document.getElementById('agendamentoId').value;
-    const clienteEl = document.getElementById('agCliente');
-    const veiculoEl = document.getElementById('agVeiculo');
-    const mecanicoEl = document.getElementById('agMecanico');
-    const dataHora = document.getElementById('agDataHora').value;
-    const status = document.getElementById('agStatus').value;
-    const observacoes = document.getElementById('agObservacoes').value;
-    const servicos = Array.from(document.getElementById('agServicos').selectedOptions).map(o => parseInt(o.value));
+    // Capturar elementos
+    const clienteSelect = document.getElementById('agCliente');
+    const veiculoSelect = document.getElementById('agVeiculo');
+    const mecanicoSelect = document.getElementById('agMecanico');
+    const dataInput = document.getElementById('agDataHora');
+    const statusSelect = document.getElementById('agStatus');
+    const obsText = document.getElementById('agObservacoes');
+    const servicosSelect = document.getElementById('agServicos');
+
+    // Capturar valores brutos
+    const clienteVal = clienteSelect.value;
+    const veiculoVal = veiculoSelect.value;
+    const mecanicoVal = mecanicoSelect.value;
+    const dataHora = dataInput.value;
+    const status = statusSelect.value;
+    const observacoes = obsText.value;
+    const servicos = Array.from(servicosSelect.selectedOptions).map(o => parseInt(o.value));
 
     // LOGS para depuração
-    console.log('Valores capturados:');
-    console.log('Cliente select value:', clienteEl.value);
-    console.log('Veículo select value:', veiculoEl.value);
-    console.log('Mecânico select value:', mecanicoEl.value);
+    console.log('===== VALORES CAPTURADOS =====');
+    console.log('Cliente (value):', clienteVal, '| tipo:', typeof clienteVal);
+    console.log('Veículo (value):', veiculoVal, '| tipo:', typeof veiculoVal);
+    console.log('Mecânico (value):', mecanicoVal, '| tipo:', typeof mecanicoVal);
     console.log('Data/Hora:', dataHora);
+    console.log('Status:', status);
+    console.log('Serviços:', servicos);
 
-    // --- VALIDAÇÕES EXPLÍCITAS ---
+    // Converter para número (usando Number para ser mais rigoroso)
+    const clienteId = Number(clienteVal);
+    const veiculoId = Number(veiculoVal);
+    const mecanicoId = Number(mecanicoVal);
+
+    console.log('ClienteId (convertido):', clienteId);
+    console.log('VeiculoId (convertido):', veiculoId);
+    console.log('MecanicoId (convertido):', mecanicoId);
+
+    // --- VALIDAÇÕES PASSO A PASSO ---
     let erro = false;
 
-    // Cliente
-    const clienteId = parseInt(clienteEl.value);
-    if (!isNumeroValido(clienteId)) {
-        showToast('Selecione um cliente válido.', 'error');
-        console.log('Cliente inválido:', clienteEl.value);
+    // 1. Cliente
+    if (!clienteVal || isNaN(clienteId) || clienteId <= 0) {
+        showToast('Selecione um cliente válido (ID: ' + clienteVal + ').', 'error');
         erro = true;
     }
 
-    // Veículo
-    const veiculoId = parseInt(veiculoEl.value);
-    if (!isNumeroValido(veiculoId)) {
-        showToast('Selecione um veículo válido.', 'error');
-        console.log('Veículo inválido:', veiculoEl.value);
+    // 2. Veículo
+    if (!veiculoVal || isNaN(veiculoId) || veiculoId <= 0) {
+        showToast('Selecione um veículo válido (ID: ' + veiculoVal + ').', 'error');
         erro = true;
     }
 
-    // Data/Hora
+    // 3. Data/Hora
     if (!dataHora || dataHora === '') {
         showToast('Preencha a data e hora.', 'error');
-        console.log('Data/Hora vazia');
         erro = true;
     }
 
-    if (erro) return;
+    if (erro) return; // Para se algum campo obrigatório estiver faltando
 
-    // Mecânico (opcional, mas convertemos)
-    const mecanicoId = parseInt(mecanicoEl.value) || null;
-
-    // --- VALIDAÇÕES ADICIONAIS ---
+    // Validação de data (futuro e horário comercial)
     if (!validarDataHora(dataHora)) return;
+
+    // Mecânico pode ser opcional, mas se for preenchido deve ser um número válido
+    const mecanicoFinal = (mecanicoVal && !isNaN(mecanicoId) && mecanicoId > 0) ? mecanicoId : null;
 
     // Duração total dos serviços
     const duracao = getDuracaoServicos(servicos) || 30;
 
-    // Verificar conflito (se mecânico foi selecionado)
-    if (mecanicoId && verificarConflito(mecanicoId, dataHora, duracao, id ? parseInt(id) : null)) {
+    // Verificar conflito (apenas se mecânico foi selecionado)
+    if (mecanicoFinal && verificarConflito(mecanicoFinal, dataHora, duracao, document.getElementById('agendamentoId').value ? parseInt(document.getElementById('agendamentoId').value) : null)) {
         showToast('Conflito de horário! Este mecânico já possui um agendamento nesse período.', 'error');
         return;
     }
 
     // --- SALVAR ---
     const ags = DB.agendamentos.get();
+    const id = document.getElementById('agendamentoId').value;
+
     if (id) {
         const idx = ags.findIndex(a => a.id === parseInt(id));
         if (idx !== -1) {
-            ags[idx] = { ...ags[idx], clienteId, veiculoId, mecanicoId, dataHora, status, observacoes, servicos };
+            ags[idx] = {
+                ...ags[idx],
+                clienteId: clienteId,
+                veiculoId: veiculoId,
+                mecanicoId: mecanicoFinal,
+                dataHora: dataHora,
+                status: status,
+                observacoes: observacoes,
+                servicos: servicos
+            };
             showToast('Agendamento atualizado com sucesso!', 'success');
         } else {
             showToast('Agendamento não encontrado para edição.', 'error');
             return;
         }
     } else {
-        const novo = { id: gerarId(ags), clienteId, veiculoId, mecanicoId, dataHora, status, observacoes, servicos };
+        const novo = {
+            id: gerarId(ags),
+            clienteId: clienteId,
+            veiculoId: veiculoId,
+            mecanicoId: mecanicoFinal,
+            dataHora: dataHora,
+            status: status,
+            observacoes: observacoes,
+            servicos: servicos
+        };
         ags.push(novo);
         if (status !== 'cancelado') agendarLembrete(novo.id);
         showToast('Agendamento criado com sucesso!', 'success');
@@ -1415,7 +1403,7 @@ function abrirHistorico(clienteId) {
 }
 
 // ============================================================
-//  IMPRESSÃO DA AGENDA DO DIA
+//  IMPRESSÃO
 // ============================================================
 function imprimirAgendaDoDia() {
     const hoje = new Date();
@@ -1465,7 +1453,7 @@ function agendarLembrete(agendamentoId) {
 }
 
 // ============================================================
-//  CLIENTES (CRUD com validação)
+//  CLIENTES
 // ============================================================
 function renderClientes() {
     const list = DB.clientes.get();
@@ -1526,7 +1514,7 @@ function excluirCliente(id) {
 }
 
 // ============================================================
-//  VEÍCULOS (CRUD com validação de placa flexível)
+//  VEÍCULOS
 // ============================================================
 function renderVeiculos() {
     const list = DB.veiculos.get();
@@ -1568,14 +1556,10 @@ function salvarVeiculo(e) {
     e.preventDefault();
     const id = document.getElementById('veiculoId').value;
     let placa = document.getElementById('veiPlaca').value.trim();
-    
     if (!validarPlaca(placa, id ? parseInt(id) : null)) return;
-    
     const placaNormalizada = placa.replace(/[\s\-\.]/g, '').toUpperCase();
-    
     const clienteId = parseInt(document.getElementById('veiCliente').value);
     if (!clienteId) { showToast('Selecione um cliente.', 'error'); return; }
-    
     const list = DB.veiculos.get();
     const obj = {
         placa: placaNormalizada,
@@ -1587,7 +1571,6 @@ function salvarVeiculo(e) {
         km: parseInt(document.getElementById('veiKm').value) || null,
         obs: document.getElementById('veiObs').value
     };
-    
     if (id) {
         const idx = list.findIndex(v => v.id === parseInt(id));
         if (idx !== -1) list[idx] = { ...list[idx], ...obj };
@@ -1840,7 +1823,7 @@ renderServicos();
 renderMeusAgendamentos();
 renderLembretesLog();
 
-console.log('🔧 Sistema de Oficina com validação reforçada ativado!');
+console.log('🔧 Sistema de Oficina com validação completa ativado!');
 </script>
 </body>
 </html>
