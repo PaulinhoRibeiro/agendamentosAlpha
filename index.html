@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🔧 Oficina - Sistema de Agendamentos</title>
 
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- FullCalendar -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
@@ -1133,7 +1136,7 @@ function renderizarCalendario() {
 }
 
 // ============================================================
-//  AGENDAMENTOS (CRUD) - CORRIGIDO COM VALIDAÇÃO PASSO A PASSO
+//  AGENDAMENTOS (CRUD) - CORRIGIDO COM ALERTAS DE DEPURAÇÃO
 // ============================================================
 function abrirModalAgendamento(data) {
     document.getElementById('formAgendamento').reset();
@@ -1240,7 +1243,7 @@ function verificarConflito(mecanicoId, dataHora, duracao, agendamentoIdIgnorar =
     });
 }
 
-// ===== SALVAR AGENDAMENTO - REESCRITO COM VALIDAÇÕES DIRETAS =====
+// ===== SALVAR AGENDAMENTO - VERSÃO DEFINITIVA COM ALERTAS =====
 function salvarAgendamento(e) {
     e.preventDefault();
 
@@ -1253,69 +1256,70 @@ function salvarAgendamento(e) {
     const obsText = document.getElementById('agObservacoes');
     const servicosSelect = document.getElementById('agServicos');
 
-    // Capturar valores brutos
+    // Capturar valores
     const clienteVal = clienteSelect.value;
     const veiculoVal = veiculoSelect.value;
     const mecanicoVal = mecanicoSelect.value;
     const dataHora = dataInput.value;
-    const status = statusSelect.value;
-    const observacoes = obsText.value;
-    const servicos = Array.from(servicosSelect.selectedOptions).map(o => parseInt(o.value));
 
-    // LOGS para depuração
-    console.log('===== VALORES CAPTURADOS =====');
-    console.log('Cliente (value):', clienteVal, '| tipo:', typeof clienteVal);
-    console.log('Veículo (value):', veiculoVal, '| tipo:', typeof veiculoVal);
-    console.log('Mecânico (value):', mecanicoVal, '| tipo:', typeof mecanicoVal);
-    console.log('Data/Hora:', dataHora);
-    console.log('Status:', status);
-    console.log('Serviços:', servicos);
+    // Converter para número usando parseInt (base 10)
+    const clienteId = parseInt(clienteVal, 10);
+    const veiculoId = parseInt(veiculoVal, 10);
+    const mecanicoId = parseInt(mecanicoVal, 10);
 
-    // Converter para número (usando Number para ser mais rigoroso)
-    const clienteId = Number(clienteVal);
-    const veiculoId = Number(veiculoVal);
-    const mecanicoId = Number(mecanicoVal);
+    // --- EXIBIR ALERT COM OS VALORES PARA DEPURAÇÃO ---
+    alert(
+        'Valores capturados:\n' +
+        'Cliente: "' + clienteVal + '" → parseInt = ' + clienteId + '\n' +
+        'Veículo: "' + veiculoVal + '" → parseInt = ' + veiculoId + '\n' +
+        'Mecânico: "' + mecanicoVal + '" → parseInt = ' + mecanicoId + '\n' +
+        'Data/Hora: "' + dataHora + '"'
+    );
 
-    console.log('ClienteId (convertido):', clienteId);
-    console.log('VeiculoId (convertido):', veiculoId);
-    console.log('MecanicoId (convertido):', mecanicoId);
-
-    // --- VALIDAÇÕES PASSO A PASSO ---
-    let erro = false;
-
-    // 1. Cliente
+    // --- VALIDAÇÃO EXPLÍCITA ---
     if (!clienteVal || isNaN(clienteId) || clienteId <= 0) {
-        showToast('Selecione um cliente válido (ID: ' + clienteVal + ').', 'error');
-        erro = true;
+        alert('Cliente inválido! Valor: "' + clienteVal + '"');
+        return;
     }
-
-    // 2. Veículo
     if (!veiculoVal || isNaN(veiculoId) || veiculoId <= 0) {
-        showToast('Selecione um veículo válido (ID: ' + veiculoVal + ').', 'error');
-        erro = true;
+        alert('Veículo inválido! Valor: "' + veiculoVal + '"');
+        return;
     }
-
-    // 3. Data/Hora
     if (!dataHora || dataHora === '') {
-        showToast('Preencha a data e hora.', 'error');
-        erro = true;
+        alert('Data/Hora vazia!');
+        return;
     }
 
-    if (erro) return; // Para se algum campo obrigatório estiver faltando
+    // Validação de data (horário comercial)
+    const dataObj = new Date(dataHora);
+    const agora = new Date();
+    if (dataObj < agora) {
+        alert('Data/hora não pode ser no passado.');
+        return;
+    }
+    const hora = dataObj.getHours();
+    if (hora < 8 || hora >= 18) {
+        alert('Horário deve estar entre 08:00 e 17:59.');
+        return;
+    }
 
-    // Validação de data (futuro e horário comercial)
-    if (!validarDataHora(dataHora)) return;
-
-    // Mecânico pode ser opcional, mas se for preenchido deve ser um número válido
+    // Mecânico pode ser opcional (se for NaN ou <=0, consideramos null)
     const mecanicoFinal = (mecanicoVal && !isNaN(mecanicoId) && mecanicoId > 0) ? mecanicoId : null;
 
-    // Duração total dos serviços
-    const duracao = getDuracaoServicos(servicos) || 30;
+    // Capturar outros campos
+    const status = statusSelect.value;
+    const observacoes = obsText.value;
+    const servicos = Array.from(servicosSelect.selectedOptions).map(o => parseInt(o.value, 10));
 
-    // Verificar conflito (apenas se mecânico foi selecionado)
-    if (mecanicoFinal && verificarConflito(mecanicoFinal, dataHora, duracao, document.getElementById('agendamentoId').value ? parseInt(document.getElementById('agendamentoId').value) : null)) {
-        showToast('Conflito de horário! Este mecânico já possui um agendamento nesse período.', 'error');
-        return;
+    // Verificar conflito (se mecânico selecionado)
+    if (mecanicoFinal) {
+        const duracao = getDuracaoServicos(servicos) || 30;
+        const idEdicao = document.getElementById('agendamentoId').value;
+        const conflito = verificarConflito(mecanicoFinal, dataHora, duracao, idEdicao ? parseInt(idEdicao, 10) : null);
+        if (conflito) {
+            alert('Conflito de horário! Este mecânico já possui um agendamento nesse período.');
+            return;
+        }
     }
 
     // --- SALVAR ---
@@ -1323,7 +1327,7 @@ function salvarAgendamento(e) {
     const id = document.getElementById('agendamentoId').value;
 
     if (id) {
-        const idx = ags.findIndex(a => a.id === parseInt(id));
+        const idx = ags.findIndex(a => a.id === parseInt(id, 10));
         if (idx !== -1) {
             ags[idx] = {
                 ...ags[idx],
@@ -1335,9 +1339,9 @@ function salvarAgendamento(e) {
                 observacoes: observacoes,
                 servicos: servicos
             };
-            showToast('Agendamento atualizado com sucesso!', 'success');
+            alert('Agendamento atualizado com sucesso!');
         } else {
-            showToast('Agendamento não encontrado para edição.', 'error');
+            alert('Agendamento não encontrado para edição.');
             return;
         }
     } else {
@@ -1353,7 +1357,7 @@ function salvarAgendamento(e) {
         };
         ags.push(novo);
         if (status !== 'cancelado') agendarLembrete(novo.id);
-        showToast('Agendamento criado com sucesso!', 'success');
+        alert('Agendamento criado com sucesso!');
     }
     DB.agendamentos.set(ags);
     fecharModal('modalAgendamento');
@@ -1823,7 +1827,7 @@ renderServicos();
 renderMeusAgendamentos();
 renderLembretesLog();
 
-console.log('🔧 Sistema de Oficina com validação completa ativado!');
+console.log('🔧 Sistema de Oficina com validação completa e alertas ativado!');
 </script>
 </body>
 </html>
