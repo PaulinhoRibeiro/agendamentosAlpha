@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        /* ===== ESTILOS (mesmo do anterior) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         :root { --primary: #6C63FF; --primary-dark: #5a52d5; --secondary: #FF6584; --success: #2ecc71; --warning: #f1c40f; --danger: #e74c3c; --bg: #f0f2f5; --card: #ffffff; --text: #2d3748; --text-light: #718096; --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); --shadow-hover: 0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04); --radius: 16px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
@@ -144,6 +143,7 @@
 
 <!-- CONTEÚDO -->
 <div class="container">
+
     <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
         <div class="dashboard-grid">
@@ -223,7 +223,10 @@
     <!-- CLIENTES -->
     <div id="page-clientes" class="page">
         <div class="card">
-            <div class="card-header"><h2><i class="fas fa-users"></i> Clientes</h2><button class="btn" onclick="abrirModalCliente()"><i class="fas fa-plus"></i> Novo</button></div>
+            <div class="card-header">
+                <h2><i class="fas fa-users"></i> Clientes</h2>
+                <button class="btn" onclick="abrirModalCliente()"><i class="fas fa-plus"></i> Novo</button>
+            </div>
             <div class="table-responsive"><table><thead><tr><th>ID</th><th>Nome</th><th>Telefone</th><th>Email</th><th>Ações</th></tr></thead><tbody id="tabelaClientes"></tbody></table></div>
         </div>
     </div>
@@ -270,6 +273,8 @@
 </div>
 
 <!-- MODAIS -->
+
+<!-- MODAL AGENDAMENTO -->
 <div class="modal-overlay" id="modalAgendamento">
     <div class="modal">
         <button class="close-btn" onclick="fecharModal('modalAgendamento')">&times;</button>
@@ -277,10 +282,12 @@
         <form id="formAgendamento" onsubmit="salvarAgendamento(event)">
             <input type="hidden" id="agendamentoId" />
             <div class="form-row">
-                <div class="form-group"><label><i class="fas fa-user"></i> Cliente</label><select id="agCliente" required></select></div>
-                <div class="form-group" id="veiculoGroup">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Cliente</label>
+                    <select id="agCliente" required></select>
+                </div>
+                <div class="form-group">
                     <label><i class="fas fa-car"></i> Veículo</label>
-                    <!-- Será preenchido dinamicamente: select para novo, input disabled para edição -->
                     <div id="veiculoContainer">
                         <select id="agVeiculo" required style="width:100%;"></select>
                     </div>
@@ -288,32 +295,130 @@
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label><i class="fas fa-user-cog"></i> Mecânico</label><select id="agMecanico" required></select></div>
-                <div class="form-group"><label><i class="fas fa-clock"></i> Data/Hora</label><input type="datetime-local" id="agDataHora" required /></div>
+                <div class="form-group">
+                    <label><i class="fas fa-user-cog"></i> Mecânico</label>
+                    <select id="agMecanico" required></select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-clock"></i> Data/Hora</label>
+                    <input type="datetime-local" id="agDataHora" required />
+                </div>
             </div>
-            <div class="form-group"><label><i class="fas fa-tools"></i> Serviços (múltiplos)</label><select id="agServicos" multiple style="height:80px;"></select></div>
+            <div class="form-group">
+                <label><i class="fas fa-tools"></i> Serviços (múltiplos)</label>
+                <select id="agServicos" multiple style="height:80px;"></select>
+            </div>
             <div class="form-row">
-                <div class="form-group"><label><i class="fas fa-flag"></i> Status</label><select id="agStatus">
-                    <option value="pendente">Pendente</option><option value="confirmado">Confirmado</option>
-                    <option value="em_andamento">Em andamento</option><option value="concluido">Concluído</option>
-                    <option value="cancelado">Cancelado</option>
-                </select></div>
-                <div class="form-group"><label><i class="fas fa-sticky-note"></i> Observações</label><textarea id="agObservacoes" rows="2"></textarea></div>
+                <div class="form-group">
+                    <label><i class="fas fa-flag"></i> Status</label>
+                    <select id="agStatus">
+                        <option value="pendente">Pendente</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="em_andamento">Em andamento</option>
+                        <option value="concluido">Concluído</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-sticky-note"></i> Observações</label>
+                    <textarea id="agObservacoes" rows="2"></textarea>
+                </div>
             </div>
             <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
         </form>
     </div>
 </div>
 
-<!-- Demais modais (Clientes, Veículos, Mecânicos, Serviços, Histórico) permanecem iguais -->
-<!-- Por brevidade, mantive apenas o essencial, mas o código completo está disponível -->
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="modalCliente">
+    <div class="modal">
+        <button class="close-btn" onclick="fecharModal('modalCliente')">&times;</button>
+        <h3><i class="fas fa-user-plus"></i> <span id="modalClienteTitulo">Novo Cliente</span></h3>
+        <form id="formCliente" onsubmit="salvarCliente(event)">
+            <input type="hidden" id="clienteId" />
+            <div class="form-group"><label><i class="fas fa-user"></i> Nome</label><input id="cliNome" required /></div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-phone"></i> Telefone (ex: (11) 99999-9999)</label><input id="cliTelefone" placeholder="(11) 99999-9999" /></div>
+                <div class="form-group"><label><i class="fas fa-envelope"></i> Email</label><input id="cliEmail" type="email" /></div>
+            </div>
+            <div class="form-group"><label><i class="fas fa-address-card"></i> Endereço</label><input id="cliEndereco" /></div>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
+        </form>
+    </div>
+</div>
 
-<div class="modal-overlay" id="modalCliente">...</div>
-<div class="modal-overlay" id="modalVeiculo">...</div>
-<div class="modal-overlay" id="modalMecanico">...</div>
-<div class="modal-overlay" id="modalServico">...</div>
-<div class="modal-overlay" id="modalHistorico">...</div>
+<!-- MODAL VEÍCULO -->
+<div class="modal-overlay" id="modalVeiculo">
+    <div class="modal">
+        <button class="close-btn" onclick="fecharModal('modalVeiculo')">&times;</button>
+        <h3><i class="fas fa-car-side"></i> <span id="modalVeiculoTitulo">Novo Veículo</span></h3>
+        <form id="formVeiculo" onsubmit="salvarVeiculo(event)">
+            <input type="hidden" id="veiculoId" />
+            <div class="form-group"><label><i class="fas fa-user"></i> Cliente</label><select id="veiCliente" required></select></div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-id-card"></i> Placa (ex: AAA-0000 ou ABC1D23)</label><input id="veiPlaca" placeholder="AAA-0000" required /></div>
+                <div class="form-group"><label><i class="fas fa-car"></i> Modelo</label><input id="veiModelo" /></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-tag"></i> Marca</label><input id="veiMarca" /></div>
+                <div class="form-group"><label><i class="fas fa-calendar-alt"></i> Ano</label><input id="veiAno" type="number" /></div>
+                <div class="form-group"><label><i class="fas fa-palette"></i> Cor</label><input id="veiCor" /></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-tachometer-alt"></i> Quilometragem</label><input id="veiKm" type="number" /></div>
+                <div class="form-group"><label><i class="fas fa-sticky-note"></i> Observações</label><textarea id="veiObs" rows="2"></textarea></div>
+            </div>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
+        </form>
+    </div>
+</div>
 
+<!-- MODAL MECÂNICO -->
+<div class="modal-overlay" id="modalMecanico">
+    <div class="modal">
+        <button class="close-btn" onclick="fecharModal('modalMecanico')">&times;</button>
+        <h3><i class="fas fa-user-plus"></i> <span id="modalMecanicoTitulo">Novo Mecânico</span></h3>
+        <form id="formMecanico" onsubmit="salvarMecanico(event)">
+            <input type="hidden" id="mecanicoId" />
+            <div class="form-group"><label><i class="fas fa-user"></i> Nome</label><input id="mecNome" required /></div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-hard-hat"></i> Especialidade</label><input id="mecEspecialidade" /></div>
+                <div class="form-group"><label><i class="fas fa-phone"></i> Telefone</label><input id="mecTelefone" /></div>
+            </div>
+            <div class="form-group"><label><i class="fas fa-envelope"></i> Email</label><input id="mecEmail" type="email" /></div>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL SERVIÇO -->
+<div class="modal-overlay" id="modalServico">
+    <div class="modal">
+        <button class="close-btn" onclick="fecharModal('modalServico')">&times;</button>
+        <h3><i class="fas fa-toolbox"></i> <span id="modalServicoTitulo">Novo Serviço</span></h3>
+        <form id="formServico" onsubmit="salvarServico(event)">
+            <input type="hidden" id="servicoId" />
+            <div class="form-group"><label><i class="fas fa-tag"></i> Nome</label><input id="serNome" required /></div>
+            <div class="form-group"><label><i class="fas fa-align-left"></i> Descrição</label><textarea id="serDescricao" rows="2"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-dollar-sign"></i> Preço Base</label><input id="serPreco" type="number" step="0.01" required /></div>
+                <div class="form-group"><label><i class="fas fa-hourglass-half"></i> Duração (min)</label><input id="serDuracao" type="number" /></div>
+            </div>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL HISTÓRICO -->
+<div class="modal-overlay" id="modalHistorico">
+    <div class="modal" style="max-width: 700px;">
+        <button class="close-btn" onclick="fecharModal('modalHistorico')">&times;</button>
+        <h3><i class="fas fa-history"></i> Histórico do Cliente</h3>
+        <div id="historicoConteudo"><p class="text-muted">Carregando...</p></div>
+    </div>
+</div>
+
+<!-- ÁREA DE IMPRESSÃO -->
 <div id="print-area" style="display:none;">
     <h2>Agenda do Dia</h2>
     <div id="print-conteudo"></div>
@@ -324,7 +429,7 @@
 <!-- ============================================================ -->
 <script>
 // ============================================================
-// DATA STORE (mesmo código)
+// DATA STORE
 // ============================================================
 const DB = {
     get(key, defaultVal = []) {
@@ -659,7 +764,7 @@ function renderizarCalendario() {
 }
 
 // ============================================================
-// AGENDAMENTOS - FUNÇÕES CORRIGIDAS
+// FUNÇÕES DE PREENCHIMENTO
 // ============================================================
 function preencherSelectClientes(selectId) {
     const sel = document.getElementById(selectId);
@@ -688,7 +793,9 @@ function preencherSelectServicosMulti(selectId) {
     sel.innerHTML = servicos.map(s => `<option value="${s.id}">${s.nome} (R$ ${s.preco?.toFixed(2)})</option>`).join('');
 }
 
-// ===== ABRIR MODAL (com campo de veículo dinâmico) =====
+// ============================================================
+// AGENDAMENTOS - CRUD COM CORREÇÃO DO VEÍCULO
+// ============================================================
 function abrirModalAgendamento(data) {
     document.getElementById('formAgendamento').reset();
     document.getElementById('agendamentoId').value = '';
@@ -697,42 +804,36 @@ function abrirModalAgendamento(data) {
     const veiculoContainer = document.getElementById('veiculoContainer');
     const veiculoHidden = document.getElementById('agVeiculoHidden');
 
-    // Preenche selects estáticos
+    // Preenche selects fixos
     preencherSelectClientes('agCliente');
     preencherSelectMecanicos('agMecanico');
     preencherSelectServicosMulti('agServicos');
 
     if (data) {
-        // EDIÇÃO: exibe o veículo como texto desabilitado
+        // EDIÇÃO
         document.getElementById('modalAgendamentoTitulo').textContent = 'Editar Agendamento';
         document.getElementById('agendamentoId').value = data.id;
 
-        // Preenche os selects de cliente e mecânico
         document.getElementById('agCliente').value = data.clienteId;
         document.getElementById('agMecanico').value = data.mecanicoId || '';
         document.getElementById('agDataHora').value = data.dataHora ? data.dataHora.slice(0,16) : '';
         document.getElementById('agStatus').value = data.status || 'pendente';
         document.getElementById('agObservacoes').value = data.observacoes || '';
 
-        // Serviços
         const servSelect = document.getElementById('agServicos');
         for (let opt of servSelect.options) {
             opt.selected = (data.servicos || []).includes(Number(opt.value));
         }
 
-        // Veículo: substitui o select por um input disabled + hidden
+        // Veículo: exibe como texto desabilitado + hidden
         const veiculo = findById(DB.veiculos.get(), data.veiculoId);
         const veiculoLabel = veiculo ? `${veiculo.placa} - ${veiculo.modelo}` : `Veículo #${data.veiculoId}`;
         veiculoContainer.innerHTML = `
             <input type="text" class="form-control" value="${veiculoLabel}" disabled style="width:100%; padding:0.6rem 1rem; border:2px solid #e2e8f0; border-radius:12px; background:#f3f4f6; color:#4b5563; cursor:not-allowed;" />
         `;
         veiculoHidden.value = data.veiculoId;
-
-        console.log('Editando - veiculoId:', data.veiculoId, 'label:', veiculoLabel);
     } else {
-        // NOVO: mostra o select de veículos normalmente
-        preencherSelectVeiculos('agVeiculo');
-        // Restaura o container para o select
+        // NOVO
         veiculoContainer.innerHTML = `<select id="agVeiculo" required style="width:100%;"></select>`;
         preencherSelectVeiculos('agVeiculo');
         veiculoHidden.value = '';
@@ -750,7 +851,6 @@ function editarAgendamento(id) {
     if (a) abrirModalAgendamento(a);
 }
 
-// ===== VALIDAÇÕES =====
 function validarDataHora(dataHora) {
     if (!dataHora) {
         showToast('Data e hora são obrigatórias.', 'error');
@@ -764,9 +864,8 @@ function validarDataHora(dataHora) {
         return false;
     }
     const hora = selected.getHours();
-    const minuto = selected.getMinutes();
-    if (hora < 8 || hora >= 18 || (hora === 17 && minuto > 30)) {
-        showToast('Horário deve estar entre 08:00 e 17:30 (último agendamento às 17:30).', 'error');
+    if (hora < 8 || hora >= 18) {
+        showToast('Horário deve estar entre 08:00 e 17:59.', 'error');
         return false;
     }
     return true;
@@ -820,7 +919,6 @@ function verificarConflito(mecanicoId, dataHora, duracao, agendamentoIdIgnorar =
     });
 }
 
-// ===== SALVAR AGENDAMENTO (com veiculoHidden) =====
 function salvarAgendamento(e) {
     e.preventDefault();
 
@@ -832,11 +930,10 @@ function salvarAgendamento(e) {
     const servicosSelect = document.getElementById('agServicos');
     const veiculoHidden = document.getElementById('agVeiculoHidden');
 
-    // Obtém o veiculoId de forma segura
     let veiculoId;
     const veiculoSelect = document.getElementById('agVeiculo');
     if (veiculoSelect) {
-        // Novo agendamento: usa o select
+        // Novo: usa o select
         veiculoId = Number(veiculoSelect.value);
     } else {
         // Edição: usa o hidden
@@ -847,12 +944,6 @@ function salvarAgendamento(e) {
     const mecanicoId = Number(mecanicoSelect.value);
     const dataHora = dataInput.value;
 
-    console.log('Salvando - Cliente:', clienteId);
-    console.log('Salvando - Veículo:', veiculoId);
-    console.log('Salvando - Mecânico:', mecanicoId);
-    console.log('Salvando - Data/Hora:', dataHora);
-
-    // Validações
     if (!clienteId || isNaN(clienteId) || clienteId <= 0) {
         showToast('Selecione um cliente válido.', 'error');
         return;
@@ -889,32 +980,14 @@ function salvarAgendamento(e) {
     if (id) {
         const idx = ags.findIndex(a => a.id === Number(id));
         if (idx !== -1) {
-            ags[idx] = {
-                ...ags[idx],
-                clienteId,
-                veiculoId,
-                mecanicoId: mecanicoFinal,
-                dataHora,
-                status,
-                observacoes,
-                servicos
-            };
+            ags[idx] = { ...ags[idx], clienteId, veiculoId, mecanicoId: mecanicoFinal, dataHora, status, observacoes, servicos };
             showToast('Agendamento atualizado com sucesso!', 'success');
         } else {
-            showToast('Agendamento não encontrado para edição.', 'error');
+            showToast('Agendamento não encontrado.', 'error');
             return;
         }
     } else {
-        const novo = {
-            id: gerarId(ags),
-            clienteId,
-            veiculoId,
-            mecanicoId: mecanicoFinal,
-            dataHora,
-            status,
-            observacoes,
-            servicos
-        };
+        const novo = { id: gerarId(ags), clienteId, veiculoId, mecanicoId: mecanicoFinal, dataHora, status, observacoes, servicos };
         ags.push(novo);
         if (status !== 'cancelado') agendarLembrete(novo.id);
         showToast('Agendamento criado com sucesso!', 'success');
@@ -938,21 +1011,430 @@ function excluirAgendamento(id) {
 }
 
 // ============================================================
-// DEMAIS FUNÇÕES (Clientes, Veículos, Mecânicos, Serviços, etc.)
+// CLIENTES (CRUD)
 // ============================================================
-// (Mantidas as mesmas funções do código original - omitidas por brevidade)
-// Exemplo: renderClientes, abrirModalCliente, salvarCliente, etc.
+function renderClientes() {
+    const list = DB.clientes.get();
+    const tbody = document.getElementById('tabelaClientes');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted">Nenhum cliente.</td></tr>'; return; }
+    tbody.innerHTML = list.map(c => `<tr>
+        <td>#${c.id}</td><td><i class="fas fa-user" style="color:var(--primary);"></i> ${c.nome}</td>
+        <td>${c.telefone || '-'}</td><td>${c.email || '-'}</td>
+        <td>
+            <button class="btn btn-sm btn-secondary" onclick="editarCliente(${c.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="excluirCliente(${c.id})"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-sm btn-success" onclick="abrirHistorico(${c.id})"><i class="fas fa-history"></i></button>
+        </td>
+    </tr>`).join('');
+}
 
+function abrirModalCliente(data) {
+    document.getElementById('formCliente').reset();
+    document.getElementById('clienteId').value = '';
+    document.getElementById('modalClienteTitulo').textContent = 'Novo Cliente';
+    if (data) {
+        document.getElementById('modalClienteTitulo').textContent = 'Editar Cliente';
+        document.getElementById('clienteId').value = data.id;
+        document.getElementById('cliNome').value = data.nome;
+        document.getElementById('cliTelefone').value = data.telefone || '';
+        document.getElementById('cliEmail').value = data.email || '';
+        document.getElementById('cliEndereco').value = data.endereco || '';
+    }
+    abrirModal('modalCliente');
+}
+
+function editarCliente(id) { const c = findById(DB.clientes.get(), id); if (c) abrirModalCliente(c); }
+
+function salvarCliente(e) {
+    e.preventDefault();
+    const id = document.getElementById('clienteId').value;
+    const nome = document.getElementById('cliNome').value.trim();
+    if (!nome) { showToast('Nome é obrigatório.', 'error'); return; }
+    const telefone = document.getElementById('cliTelefone').value;
+    if (!validarTelefone(telefone) && telefone) return;
+
+    const list = DB.clientes.get();
+    const obj = { nome, telefone, email: document.getElementById('cliEmail').value, endereco: document.getElementById('cliEndereco').value };
+    if (id) {
+        const idx = list.findIndex(c => c.id === Number(id));
+        if (idx !== -1) list[idx] = { ...list[idx], ...obj };
+    } else {
+        obj.id = gerarId(list);
+        list.push(obj);
+    }
+    DB.clientes.set(list);
+    fecharModal('modalCliente');
+    renderClientes();
+    showToast('Cliente salvo com sucesso!', 'success');
+}
+
+function excluirCliente(id) {
+    if (!confirm('Excluir cliente?')) return;
+    let list = DB.clientes.get();
+    list = list.filter(c => c.id !== id);
+    DB.clientes.set(list);
+    renderClientes();
+    showToast('Cliente excluído.', 'warning');
+}
+
+// ============================================================
+// VEÍCULOS (CRUD)
+// ============================================================
+function renderVeiculos() {
+    const list = DB.veiculos.get();
+    const tbody = document.getElementById('tabelaVeiculos');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-muted">Nenhum veículo.</td></tr>'; return; }
+    tbody.innerHTML = list.map(v => `<tr>
+        <td><strong>${v.placa}</strong></td><td>${v.modelo || '-'}</td><td>${v.marca || '-'}</td>
+        <td>${v.ano || '-'}</td><td>${getNomeCliente(v.clienteId)}</td>
+        <td>
+            <button class="btn btn-sm btn-secondary" onclick="editarVeiculo(${v.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="excluirVeiculo(${v.id})"><i class="fas fa-trash"></i></button>
+        </td>
+    </tr>`).join('');
+}
+
+function abrirModalVeiculo(data) {
+    document.getElementById('formVeiculo').reset();
+    document.getElementById('veiculoId').value = '';
+    document.getElementById('modalVeiculoTitulo').textContent = 'Novo Veículo';
+    preencherSelectClientes('veiCliente');
+    if (data) {
+        document.getElementById('modalVeiculoTitulo').textContent = 'Editar Veículo';
+        document.getElementById('veiculoId').value = data.id;
+        document.getElementById('veiCliente').value = data.clienteId;
+        document.getElementById('veiPlaca').value = data.placa;
+        document.getElementById('veiModelo').value = data.modelo || '';
+        document.getElementById('veiMarca').value = data.marca || '';
+        document.getElementById('veiAno').value = data.ano || '';
+        document.getElementById('veiCor').value = data.cor || '';
+        document.getElementById('veiKm').value = data.km || '';
+        document.getElementById('veiObs').value = data.obs || '';
+    }
+    abrirModal('modalVeiculo');
+}
+
+function editarVeiculo(id) { const v = findById(DB.veiculos.get(), id); if (v) abrirModalVeiculo(v); }
+
+function salvarVeiculo(e) {
+    e.preventDefault();
+    const id = document.getElementById('veiculoId').value;
+    let placa = document.getElementById('veiPlaca').value.trim();
+    if (!validarPlaca(placa, id ? Number(id) : null)) return;
+    const placaNormalizada = placa.replace(/[\s\-\.]/g, '').toUpperCase();
+    const clienteId = Number(document.getElementById('veiCliente').value);
+    if (!clienteId) { showToast('Selecione um cliente.', 'error'); return; }
+
+    const list = DB.veiculos.get();
+    const obj = {
+        placa: placaNormalizada,
+        clienteId,
+        modelo: document.getElementById('veiModelo').value,
+        marca: document.getElementById('veiMarca').value,
+        ano: Number(document.getElementById('veiAno').value) || null,
+        cor: document.getElementById('veiCor').value,
+        km: Number(document.getElementById('veiKm').value) || null,
+        obs: document.getElementById('veiObs').value
+    };
+    if (id) {
+        const idx = list.findIndex(v => v.id === Number(id));
+        if (idx !== -1) list[idx] = { ...list[idx], ...obj };
+    } else {
+        obj.id = gerarId(list);
+        list.push(obj);
+    }
+    DB.veiculos.set(list);
+    fecharModal('modalVeiculo');
+    renderVeiculos();
+    showToast('Veículo salvo com sucesso!', 'success');
+}
+
+function excluirVeiculo(id) {
+    if (!confirm('Excluir veículo?')) return;
+    let list = DB.veiculos.get();
+    list = list.filter(v => v.id !== id);
+    DB.veiculos.set(list);
+    renderVeiculos();
+    showToast('Veículo excluído.', 'warning');
+}
+
+// ============================================================
+// MECÂNICOS (CRUD)
+// ============================================================
+function renderMecanicos() {
+    const list = DB.mecanicos.get();
+    const tbody = document.getElementById('tabelaMecanicos');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted">Nenhum mecânico.</td></tr>'; return; }
+    tbody.innerHTML = list.map(m => `<tr>
+        <td>#${m.id}</td><td><i class="fas fa-user-cog" style="color:var(--primary);"></i> ${m.nome}</td>
+        <td>${m.especialidade || '-'}</td><td>${m.telefone || '-'}</td>
+        <td>
+            <button class="btn btn-sm btn-secondary" onclick="editarMecanico(${m.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="excluirMecanico(${m.id})"><i class="fas fa-trash"></i></button>
+        </td>
+    </tr>`).join('');
+}
+
+function abrirModalMecanico(data) {
+    document.getElementById('formMecanico').reset();
+    document.getElementById('mecanicoId').value = '';
+    document.getElementById('modalMecanicoTitulo').textContent = 'Novo Mecânico';
+    if (data) {
+        document.getElementById('modalMecanicoTitulo').textContent = 'Editar Mecânico';
+        document.getElementById('mecanicoId').value = data.id;
+        document.getElementById('mecNome').value = data.nome;
+        document.getElementById('mecEspecialidade').value = data.especialidade || '';
+        document.getElementById('mecTelefone').value = data.telefone || '';
+        document.getElementById('mecEmail').value = data.email || '';
+    }
+    abrirModal('modalMecanico');
+}
+
+function editarMecanico(id) { const m = findById(DB.mecanicos.get(), id); if (m) abrirModalMecanico(m); }
+
+function salvarMecanico(e) {
+    e.preventDefault();
+    const id = document.getElementById('mecanicoId').value;
+    const nome = document.getElementById('mecNome').value.trim();
+    if (!nome) { showToast('Nome é obrigatório.', 'error'); return; }
+    const list = DB.mecanicos.get();
+    const obj = { nome, especialidade: document.getElementById('mecEspecialidade').value, telefone: document.getElementById('mecTelefone').value, email: document.getElementById('mecEmail').value };
+    if (id) {
+        const idx = list.findIndex(m => m.id === Number(id));
+        if (idx !== -1) list[idx] = { ...list[idx], ...obj };
+    } else {
+        obj.id = gerarId(list);
+        list.push(obj);
+    }
+    DB.mecanicos.set(list);
+    fecharModal('modalMecanico');
+    renderMecanicos();
+    showToast('Mecânico salvo com sucesso!', 'success');
+}
+
+function excluirMecanico(id) {
+    if (!confirm('Excluir mecânico?')) return;
+    let list = DB.mecanicos.get();
+    list = list.filter(m => m.id !== id);
+    DB.mecanicos.set(list);
+    renderMecanicos();
+    showToast('Mecânico excluído.', 'warning');
+}
+
+// ============================================================
+// SERVIÇOS (CRUD)
+// ============================================================
+function renderServicos() {
+    const list = DB.servicos.get();
+    const tbody = document.getElementById('tabelaServicos');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted">Nenhum serviço.</td></tr>'; return; }
+    tbody.innerHTML = list.map(s => `<tr>
+        <td>#${s.id}</td><td><i class="fas fa-tools" style="color:var(--secondary);"></i> ${s.nome}</td>
+        <td>R$ ${s.preco?.toFixed(2) || '0,00'}</td><td>${s.duracao || '-'}</td>
+        <td>
+            <button class="btn btn-sm btn-secondary" onclick="editarServico(${s.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="excluirServico(${s.id})"><i class="fas fa-trash"></i></button>
+        </td>
+    </tr>`).join('');
+}
+
+function abrirModalServico(data) {
+    document.getElementById('formServico').reset();
+    document.getElementById('servicoId').value = '';
+    document.getElementById('modalServicoTitulo').textContent = 'Novo Serviço';
+    if (data) {
+        document.getElementById('modalServicoTitulo').textContent = 'Editar Serviço';
+        document.getElementById('servicoId').value = data.id;
+        document.getElementById('serNome').value = data.nome;
+        document.getElementById('serDescricao').value = data.descricao || '';
+        document.getElementById('serPreco').value = data.preco || '';
+        document.getElementById('serDuracao').value = data.duracao || '';
+    }
+    abrirModal('modalServico');
+}
+
+function editarServico(id) { const s = findById(DB.servicos.get(), id); if (s) abrirModalServico(s); }
+
+function salvarServico(e) {
+    e.preventDefault();
+    const id = document.getElementById('servicoId').value;
+    const nome = document.getElementById('serNome').value.trim();
+    if (!nome) { showToast('Nome é obrigatório.', 'error'); return; }
+    const preco = Number(document.getElementById('serPreco').value) || 0;
+    const list = DB.servicos.get();
+    const obj = { nome, descricao: document.getElementById('serDescricao').value, preco, duracao: Number(document.getElementById('serDuracao').value) || null };
+    if (id) {
+        const idx = list.findIndex(s => s.id === Number(id));
+        if (idx !== -1) list[idx] = { ...list[idx], ...obj };
+    } else {
+        obj.id = gerarId(list);
+        list.push(obj);
+    }
+    DB.servicos.set(list);
+    fecharModal('modalServico');
+    renderServicos();
+    showToast('Serviço salvo com sucesso!', 'success');
+}
+
+function excluirServico(id) {
+    if (!confirm('Excluir serviço?')) return;
+    let list = DB.servicos.get();
+    list = list.filter(s => s.id !== id);
+    DB.servicos.set(list);
+    renderServicos();
+    showToast('Serviço excluído.', 'warning');
+}
+
+// ============================================================
+// MEUS AGENDAMENTOS
+// ============================================================
+function renderMeusAgendamentos() {
+    const usuario = getUsuarioLogado();
+    const mecanicos = DB.mecanicos.get();
+    let mecanicoId = null;
+    if (usuario === 'admin') {
+        document.getElementById('meuNomeMecanico').textContent = ' (Admin - todos os agendamentos)';
+        const ags = DB.agendamentos.get();
+        renderTabelaMeus(ags);
+        return;
+    } else {
+        const num = Number(usuario.replace('mec', ''));
+        const mec = mecanicos.find(m => m.id === num);
+        if (mec) { mecanicoId = mec.id; document.getElementById('meuNomeMecanico').textContent = ' - ' + mec.nome; }
+        else { document.getElementById('meuNomeMecanico').textContent = ' (mecânico não encontrado)'; renderTabelaMeus([]); return; }
+    }
+    const ags = DB.agendamentos.get().filter(a => a.mecanicoId === mecanicoId);
+    renderTabelaMeus(ags);
+}
+
+function renderTabelaMeus(ags) {
+    const tbody = document.getElementById('tabelaMeusAgendamentos');
+    if (!ags.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-muted">Nenhum agendamento para você.</td></tr>'; return; }
+    tbody.innerHTML = ags.map(a => {
+        const servNomes = (a.servicos || []).map(id => getNomeServico(id)).join(', ') || '-';
+        const podeEditar = a.status !== 'concluido' && a.status !== 'cancelado';
+        return `<tr>
+            <td>#${a.id}</td>
+            <td><i class="fas fa-user" style="color:var(--primary);"></i> ${getNomeCliente(a.clienteId)}</td>
+            <td><i class="fas fa-car" style="color:var(--secondary);"></i> ${getVeiculoInfo(a.veiculoId)}</td>
+            <td><i class="far fa-clock"></i> ${formatDate(a.dataHora)}</td>
+            <td>${servNomes}</td>
+            <td><span class="status-badge ${getStatusClass(a.status)}"><i class="fas fa-circle"></i> ${getStatusLabel(a.status)}</span></td>
+            <td>
+                ${podeEditar ? `<button class="btn btn-sm btn-secondary" onclick="editarAgendamento(${a.id})"><i class="fas fa-edit"></i></button>` : ''}
+                <button class="btn btn-sm btn-success" onclick="mudarStatusMeuAgendamento(${a.id}, 'em_andamento')"><i class="fas fa-play"></i></button>
+                <button class="btn btn-sm btn-secondary" onclick="mudarStatusMeuAgendamento(${a.id}, 'concluido')"><i class="fas fa-check"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function mudarStatusMeuAgendamento(id, novoStatus) {
+    const ags = DB.agendamentos.get();
+    const idx = ags.findIndex(a => a.id === id);
+    if (idx === -1) return;
+    ags[idx].status = novoStatus;
+    DB.agendamentos.set(ags);
+    renderMeusAgendamentos();
+    atualizarDashboard();
+    if (calendarInstance) renderizarCalendario();
+    showToast(`Status alterado para ${getStatusLabel(novoStatus)}`, 'success');
+}
+
+// ============================================================
+// HISTÓRICO DO CLIENTE
+// ============================================================
 function abrirHistorico(clienteId) {
-    // ... (mesma função)
+    const cliente = findById(DB.clientes.get(), clienteId);
+    if (!cliente) { showToast('Cliente não encontrado.', 'error'); return; }
+    const veiculos = DB.veiculos.get().filter(v => v.clienteId === clienteId);
+    const agendamentos = DB.agendamentos.get().filter(a => a.clienteId === clienteId);
+
+    let html = `<h4>${cliente.nome}</h4><p><i class="fas fa-phone"></i> ${cliente.telefone || '-'} | <i class="fas fa-envelope"></i> ${cliente.email || '-'}</p>`;
+    html += `<h5 style="margin-top:1rem;"><i class="fas fa-car"></i> Veículos</h5>`;
+    if (veiculos.length) {
+        html += `<ul>${veiculos.map(v => `<li>${v.placa} - ${v.modelo} (${v.ano})</li>`).join('')}</ul>`;
+    } else {
+        html += `<p class="text-muted">Nenhum veículo cadastrado.</p>`;
+    }
+    html += `<h5 style="margin-top:1rem;"><i class="fas fa-calendar-check"></i> Agendamentos</h5>`;
+    if (agendamentos.length) {
+        html += `<ul>${agendamentos.map(a => `<li>#${a.id} - ${formatDate(a.dataHora)} - ${getStatusLabel(a.status)} (${getNomeMecanico(a.mecanicoId)})</li>`).join('')}</ul>`;
+    } else {
+        html += `<p class="text-muted">Nenhum agendamento.</p>`;
+    }
+    document.getElementById('historicoConteudo').innerHTML = html;
+    abrirModal('modalHistorico');
 }
 
+// ============================================================
+// IMPRESSÃO
+// ============================================================
 function imprimirAgendaDoDia() {
-    // ... (mesma função)
+    const hoje = new Date();
+    const hojeStr = hoje.toDateString();
+    const ags = DB.agendamentos.get().filter(a => new Date(a.dataHora).toDateString() === hojeStr);
+    const printArea = document.getElementById('print-conteudo');
+    if (!ags.length) {
+        printArea.innerHTML = '<p class="text-muted">Nenhum agendamento para hoje.</p>';
+    } else {
+        let html = `<table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead><tr><th>Horário</th><th>Cliente</th><th>Veículo</th><th>Serviços</th><th>Mecânico</th><th>Status</th></tr></thead><tbody>`;
+        ags.sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora));
+        ags.forEach(a => {
+            const servNomes = (a.servicos || []).map(id => getNomeServico(id)).join(', ') || '-';
+            html += `<tr><td>${formatDateShort(a.dataHora)}</td><td>${getNomeCliente(a.clienteId)}</td><td>${getVeiculoInfo(a.veiculoId)}</td><td>${servNomes}</td><td>${getNomeMecanico(a.mecanicoId)}</td><td>${getStatusLabel(a.status)}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        printArea.innerHTML = html;
+    }
+    document.getElementById('print-area').style.display = 'block';
+    setTimeout(() => {
+        window.print();
+        document.getElementById('print-area').style.display = 'none';
+    }, 300);
 }
 
+// ============================================================
+// LEMBRETES
+// ============================================================
 function agendarLembrete(agendamentoId) {
-    // ... (mesma função)
+    const delay = 5000;
+    setTimeout(() => {
+        const ag = findById(DB.agendamentos.get(), agendamentoId);
+        if (!ag || ag.status === 'cancelado') return;
+        const cliente = findById(DB.clientes.get(), ag.clienteId);
+        if (!cliente) return;
+        const lembretes = DB.lembretes.get();
+        if (lembretes.some(l => l.agendamentoId === agendamentoId)) return;
+        const novo = { id: gerarId(lembretes), agendamentoId, tipo: 'email', enviadoEm: new Date().toISOString(), status: 'enviado' };
+        lembretes.push(novo);
+        DB.lembretes.set(lembretes);
+        if (Notification.permission === 'granted') {
+            new Notification('Lembrete de Agendamento', { body: `Cliente ${cliente.nome} - ${formatDate(ag.dataHora)}` });
+        }
+        if (document.getElementById('page-lembretes-log').classList.contains('active')) renderLembretesLog();
+    }, delay);
+}
+
+// ============================================================
+// LEMBRETES LOG
+// ============================================================
+function renderLembretesLog() {
+    const list = DB.lembretes.get();
+    const tbody = document.getElementById('tabelaLembretes');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted">Nenhum lembrete enviado.</td></tr>'; return; }
+    tbody.innerHTML = list.map(l => {
+        const ag = findById(DB.agendamentos.get(), l.agendamentoId);
+        const cliente = ag ? getNomeCliente(ag.clienteId) : 'N/A';
+        return `<tr>
+            <td>#${l.agendamentoId}</td>
+            <td>${cliente}</td>
+            <td><i class="fas ${l.tipo === 'email' ? 'fa-envelope' : 'fa-sms'}"></i> ${l.tipo}</td>
+            <td>${formatDate(l.enviadoEm)}</td>
+            <td><span class="status-badge ${l.status === 'enviado' ? 'status-concluido' : 'status-cancelado'}"><i class="fas fa-circle"></i> ${l.status}</span></td>
+        </tr>`;
+    }).join('');
 }
 
 // ============================================================
@@ -970,7 +1452,7 @@ renderServicos();
 renderMeusAgendamentos();
 renderLembretesLog();
 
-console.log('🔧 Sistema de Oficina com solução definitiva para veículo ativado!');
+console.log('🔧 Sistema de Oficina restaurado e corrigido!');
 </script>
 </body>
 </html>
