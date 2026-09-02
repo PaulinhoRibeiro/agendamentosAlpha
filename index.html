@@ -4,13 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🔧 Oficina - Sistema de Agendamentos</title>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-
     <style>
-        /* (mesmo CSS anterior - mantido igual) */
+        /* ===== ESTILOS (mesmo do anterior) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         :root { --primary: #6C63FF; --primary-dark: #5a52d5; --secondary: #FF6584; --success: #2ecc71; --warning: #f1c40f; --danger: #e74c3c; --bg: #f0f2f5; --card: #ffffff; --text: #2d3748; --text-light: #718096; --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); --shadow-hover: 0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04); --radius: 16px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
@@ -116,7 +114,6 @@
 </head>
 <body>
 
-<!-- NAVEGAÇÃO (idêntica) -->
 <nav>
     <div class="logo"><i class="fas fa-wrench"></i> Oficina</div>
     <div class="nav-links">
@@ -141,14 +138,242 @@
     </div>
 </nav>
 
-<!-- CONTEÚDO (idêntico) -->
 <div class="container">
-    <!-- (mesmo conteúdo HTML das páginas, modais etc.) -->
-    <!-- Mantive exatamente igual ao seu arquivo, por isso omiti aqui para não repetir todo o HTML -->
-    <!-- Mas no código final estará completo -->
-    <!-- Para evitar repetição, colocarei o restante do código após o script -->
-    <!-- ... -->
+    <div id="page-dashboard" class="page active">
+        <div class="dashboard-grid">
+            <div class="stat-card"><div class="number" id="statTotal">0</div><div class="label">Total Agend.</div><i class="fas fa-calendar-alt icon"></i></div>
+            <div class="stat-card"><div class="number" id="statHoje">0</div><div class="label">Hoje</div><i class="fas fa-sun icon"></i></div>
+            <div class="stat-card"><div class="number" id="statPendentes">0</div><div class="label">Pendentes</div><i class="fas fa-clock icon"></i></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-box"><canvas id="chartStatus"></canvas></div>
+            <div class="chart-box"><canvas id="chartSemana"></canvas></div>
+        </div>
+    </div>
+
+    <div id="page-agendamentos" class="page">
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-calendar-check"></i> Agendamentos</h2>
+                <div class="flex">
+                    <button class="btn btn-secondary" onclick="imprimirAgendaDoDia()"><i class="fas fa-print"></i> Imprimir Hoje</button>
+                    <button class="btn" onclick="abrirModalAgendamento()"><i class="fas fa-plus"></i> Novo</button>
+                </div>
+            </div>
+            <div class="filtros-row">
+                <div class="form-group">
+                    <label><i class="fas fa-tag"></i> Status</label>
+                    <select id="filtroStatus" onchange="aplicarFiltros()">
+                        <option value="">Todos</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="em_andamento">Em andamento</option>
+                        <option value="concluido">Concluído</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-user-cog"></i> Mecânico</label>
+                    <select id="filtroMecanico" onchange="aplicarFiltros()">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Cliente</label>
+                    <input type="text" id="filtroCliente" placeholder="Buscar cliente..." oninput="aplicarFiltros()" />
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-day"></i> Período</label>
+                    <select id="filtroPeriodo" onchange="aplicarFiltros()">
+                        <option value="todos">Todos</option>
+                        <option value="hoje">Hoje</option>
+                        <option value="semana">Esta semana</option>
+                        <option value="mes">Este mês</option>
+                    </select>
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="limparFiltros()"><i class="fas fa-undo"></i> Limpar</button>
+            </div>
+            <div class="table-responsive" style="margin-top:1rem;">
+                <table>
+                    <thead><tr><th>ID</th><th>Cliente</th><th>Veículo</th><th>Mecânico</th><th>Data/Hora</th><th>Serviços</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody id="tabelaAgendamentos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-calendario" class="page">
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-calendar-alt"></i> Calendário</h2>
+                <button class="btn" onclick="abrirModalAgendamento()"><i class="fas fa-plus"></i> Novo</button>
+            </div>
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <div id="page-clientes" class="page">
+        <div class="card">
+            <div class="card-header"><h2><i class="fas fa-users"></i> Clientes</h2><button class="btn" onclick="abrirModalCliente()"><i class="fas fa-plus"></i> Novo</button></div>
+            <div class="table-responsive"><table><thead><tr><th>ID</th><th>Nome</th><th>Telefone</th><th>Email</th><th>Ações</th></tr></thead><tbody id="tabelaClientes"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="page-veiculos" class="page">
+        <div class="card">
+            <div class="card-header"><h2><i class="fas fa-car"></i> Veículos</h2><button class="btn" onclick="abrirModalVeiculo()"><i class="fas fa-plus"></i> Novo</button></div>
+            <div class="table-responsive"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Marca</th><th>Ano</th><th>Cliente</th><th>Ações</th></tr></thead><tbody id="tabelaVeiculos"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="page-mecanicos" class="page">
+        <div class="card">
+            <div class="card-header"><h2><i class="fas fa-user-cog"></i> Mecânicos</h2><button class="btn" onclick="abrirModalMecanico()"><i class="fas fa-plus"></i> Novo</button></div>
+            <div class="table-responsive"><table><thead><tr><th>ID</th><th>Nome</th><th>Especialidade</th><th>Telefone</th><th>Ações</th></tr></thead><tbody id="tabelaMecanicos"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="page-servicos" class="page">
+        <div class="card">
+            <div class="card-header"><h2><i class="fas fa-tools"></i> Serviços</h2><button class="btn" onclick="abrirModalServico()"><i class="fas fa-plus"></i> Novo</button></div>
+            <div class="table-responsive"><table><thead><tr><th>ID</th><th>Nome</th><th>Preço Base</th><th>Duração (min)</th><th>Ações</th></tr></thead><tbody id="tabelaServicos"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="page-meus-agendamentos" class="page">
+        <div class="card">
+            <div class="card-header"><h2><i class="fas fa-calendar-day"></i> Meus Agendamentos</h2><span class="text-muted" id="meuNomeMecanico"></span></div>
+            <div class="table-responsive"><table><thead><tr><th>ID</th><th>Cliente</th><th>Veículo</th><th>Data/Hora</th><th>Serviços</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaMeusAgendamentos"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="page-lembretes-log" class="page">
+        <div class="card">
+            <div class="card-header"><h2><i class="fas fa-bell"></i> Log de Lembretes</h2></div>
+            <div class="table-responsive"><table><thead><tr><th>Agendamento</th><th>Cliente</th><th>Tipo</th><th>Enviado em</th><th>Status</th></tr></thead><tbody id="tabelaLembretes"></tbody></table></div>
+        </div>
+    </div>
 </div>
+
+<!-- MODAIS -->
+<div class="modal-overlay" id="modalAgendamento">
+    <div class="modal">
+        <button class="close-btn" onclick="fecharModal('modalAgendamento')">&times;</button>
+        <h3><i class="fas fa-calendar-plus"></i> <span id="modalAgendamentoTitulo">Novo Agendamento</span></h3>
+        <form id="formAgendamento" onsubmit="salvarAgendamento(event)">
+            <input type="hidden" id="agendamentoId" />
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-user"></i> Cliente</label><select id="agCliente" required></select></div>
+                <div class="form-group"><label><i class="fas fa-car"></i> Veículo</label><select id="agVeiculo" required></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-user-cog"></i> Mecânico</label><select id="agMecanico" required></select></div>
+                <div class="form-group"><label><i class="fas fa-clock"></i> Data/Hora</label><input type="datetime-local" id="agDataHora" required /></div>
+            </div>
+            <div class="form-group"><label><i class="fas fa-tools"></i> Serviços (múltiplos)</label><select id="agServicos" multiple style="height:80px;"></select></div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-flag"></i> Status</label><select id="agStatus">
+                    <option value="pendente">Pendente</option><option value="confirmado">Confirmado</option>
+                    <option value="em_andamento">Em andamento</option><option value="concluido">Concluído</option>
+                    <option value="cancelado">Cancelado</option>
+                </select></div>
+                <div class="form-group"><label><i class="fas fa-sticky-note"></i> Observações</label><textarea id="agObservacoes" rows="2"></textarea></div>
+            </div>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalCliente">
+    <div class="modal">
+        <button class="close-btn" onclick="fecharModal('modalCliente')">&times;</button>
+        <h3><i class="fas fa-user-plus"></i> <span id="modalClienteTitulo">Novo Cliente</span></h3>
+        <form id="formCliente" onsubmit="salvarCliente(event)">
+            <input type="hidden" id="clienteId" />
+            <div class="form-group"><label><i class="fas fa-user"></i> Nome</label><input id="cliNome" required /></div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-phone"></i> Telefone (ex: (11) 99999-9999)</label><input id="cliTelefone" placeholder="(11) 99999-9999" /></div>
+                <div class="form-group"><label><i class="fas fa-envelope"></i> Email</label><input id="cliEmail" type="email" /></div>
+            </div>
+            <div class="form-group"><label><i class="fas fa-address-card"></i> Endereço</label><input id="cliEndereco" /></div>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalVeiculo">
+    <div class="modal">
+        <button class="close-btn" onclick="fecharModal('modalVeiculo')">&times;</button>
+        <h3><i class="fas fa-car-side"></i> <span id="modalVeiculoTitulo">Novo Veículo</span></h3>
+        <form id="formVeiculo" onsubmit="salvarVeiculo(event)">
+            <input type="hidden" id="veiculoId" />
+            <div class="form-group"><label><i class="fas fa-user"></i> Cliente</label><select id="veiCliente" required></select></div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-id-card"></i> Placa (ex: AAA-0000 ou ABC1D23)</label><input id="veiPlaca" placeholder="AAA-0000" required /></div>
+                <div class="form-group"><label><i class="fas fa-car"></i> Modelo</label><input id="veiModelo" /></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-tag"></i> Marca</label><input id="veiMarca" /></div>
+                <div class="form-group"><label><i class="fas fa-calendar-alt"></i> Ano</label><input id="veiAno" type="number" /></div>
+                <div class="form-group"><label><i class="fas fa-palette"></i> Cor</label><input id="veiCor" /></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-tachometer-alt"></i> Quilometragem</label><input id="veiKm" type="number" /></div>
+                <div class="form-group"><label><i class="fas fa-sticky-note"></i> Observações</label><textarea id="veiObs" rows="2"></textarea></div>
+            </div>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalMecanico">
+    <div class="modal">
+        <button class="close-btn" onclick="fecharModal('modalMecanico')">&times;</button>
+        <h3><i class="fas fa-user-plus"></i> <span id="modalMecanicoTitulo">Novo Mecânico</span></h3>
+        <form id="formMecanico" onsubmit="salvarMecanico(event)">
+            <input type="hidden" id="mecanicoId" />
+            <div class="form-group"><label><i class="fas fa-user"></i> Nome</label><input id="mecNome" required /></div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-hard-hat"></i> Especialidade</label><input id="mecEspecialidade" /></div>
+                <div class="form-group"><label><i class="fas fa-phone"></i> Telefone</label><input id="mecTelefone" /></div>
+            </div>
+            <div class="form-group"><label><i class="fas fa-envelope"></i> Email</label><input id="mecEmail" type="email" /></div>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalServico">
+    <div class="modal">
+        <button class="close-btn" onclick="fecharModal('modalServico')">&times;</button>
+        <h3><i class="fas fa-toolbox"></i> <span id="modalServicoTitulo">Novo Serviço</span></h3>
+        <form id="formServico" onsubmit="salvarServico(event)">
+            <input type="hidden" id="servicoId" />
+            <div class="form-group"><label><i class="fas fa-tag"></i> Nome</label><input id="serNome" required /></div>
+            <div class="form-group"><label><i class="fas fa-align-left"></i> Descrição</label><textarea id="serDescricao" rows="2"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fas fa-dollar-sign"></i> Preço Base</label><input id="serPreco" type="number" step="0.01" required /></div>
+                <div class="form-group"><label><i class="fas fa-hourglass-half"></i> Duração (min)</label><input id="serDuracao" type="number" /></div>
+            </div>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalHistorico">
+    <div class="modal" style="max-width: 700px;">
+        <button class="close-btn" onclick="fecharModal('modalHistorico')">&times;</button>
+        <h3><i class="fas fa-history"></i> Histórico do Cliente</h3>
+        <div id="historicoConteudo"><p class="text-muted">Carregando...</p></div>
+    </div>
+</div>
+
+<div id="print-area" style="display:none;">
+    <h2>Agenda do Dia</h2>
+    <div id="print-conteudo"></div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
 
 <!-- ============================================================ -->
 <script>
@@ -174,7 +399,7 @@ const DB = {
 };
 
 // ============================================================
-// DADOS INICIAIS (mesmo)
+// DADOS INICIAIS
 // ============================================================
 function initDados() {
     if (DB.clientes.get().length === 0) {
@@ -223,7 +448,7 @@ function initDados() {
 initDados();
 
 // ============================================================
-// HELPERS (mesmo)
+// HELPERS
 // ============================================================
 function gerarId(lista) {
     return lista.length ? Math.max(...lista.map(i => i.id || 0)) + 1 : 1;
@@ -289,14 +514,209 @@ function showToast(message, type = 'success') {
 }
 
 // ============================================================
-// NAVEGAÇÃO, MODAIS, DASHBOARD, FILTROS etc. (idênticos)
+// NAVEGAÇÃO
 // ============================================================
-// ... (mantive todo o resto igual, inclusive as funções de preenchimento antigas)
-// Mas vou substituir as funções críticas por versões melhoradas.
+document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const page = this.dataset.page;
+        document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+        this.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const target = document.getElementById('page-' + page);
+        if (target) target.classList.add('active');
+        if (page === 'dashboard') atualizarDashboard();
+        else if (page === 'agendamentos') { preencherFiltros(); aplicarFiltros(); }
+        else if (page === 'calendario') renderizarCalendario();
+        else if (page === 'clientes') renderClientes();
+        else if (page === 'veiculos') renderVeiculos();
+        else if (page === 'mecanicos') renderMecanicos();
+        else if (page === 'servicos') renderServicos();
+        else if (page === 'meus-agendamentos') renderMeusAgendamentos();
+        else if (page === 'lembretes-log') renderLembretesLog();
+    });
+});
+
+document.getElementById('usuarioAtual').addEventListener('change', function() {
+    if (document.getElementById('page-meus-agendamentos').classList.contains('active')) renderMeusAgendamentos();
+    if (document.getElementById('page-dashboard').classList.contains('active')) atualizarDashboard();
+});
+function getUsuarioLogado() { return document.getElementById('usuarioAtual').value; }
 
 // ============================================================
-// FUNÇÕES DE PREENCHIMENTO CORRIGIDAS
+// MODAIS
 // ============================================================
+function abrirModal(id) { document.getElementById(id).classList.add('active'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+});
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+let chartStatus = null, chartSemana = null;
+function atualizarDashboard() {
+    const ags = DB.agendamentos.get();
+    const total = ags.length;
+    const hoje = new Date();
+    const hojeStr = hoje.toDateString();
+    const agHoje = ags.filter(a => new Date(a.dataHora).toDateString() === hojeStr);
+    const pendentes = ags.filter(a => a.status === 'pendente' || a.status === 'confirmado');
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statHoje').textContent = agHoje.length;
+    document.getElementById('statPendentes').textContent = pendentes.length;
+
+    const statusCount = {};
+    ags.forEach(a => { statusCount[a.status] = (statusCount[a.status] || 0) + 1; });
+    const labels = Object.keys(statusCount).map(s => getStatusLabel(s));
+    const data = Object.values(statusCount);
+    const colors = ['#fcd34d','#93c5fd','#f59e0b','#6ee7b7','#fca5a5'];
+    if (chartStatus) chartStatus.destroy();
+    const ctx1 = document.getElementById('chartStatus').getContext('2d');
+    chartStatus = new Chart(ctx1, {
+        type: 'pie',
+        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0,labels.length) }] },
+        options: { plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } } }
+    });
+
+    const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const counts = Array(7).fill(0);
+    const hojeNum = hoje.getDay();
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(hoje);
+        d.setDate(d.getDate() - (hojeNum - i + 7) % 7);
+        const diaStr = d.toDateString();
+        counts[i] = ags.filter(a => new Date(a.dataHora).toDateString() === diaStr).length;
+    }
+    if (chartSemana) chartSemana.destroy();
+    const ctx2 = document.getElementById('chartSemana').getContext('2d');
+    chartSemana = new Chart(ctx2, {
+        type: 'bar',
+        data: { labels: diasSemana, datasets: [{ label: 'Agendamentos', data: counts, backgroundColor: '#6C63FF' }] },
+        options: { plugins: { legend: { display: false } } }
+    });
+}
+
+// ============================================================
+// FILTROS
+// ============================================================
+function preencherFiltros() {
+    const sel = document.getElementById('filtroMecanico');
+    const mecanicos = DB.mecanicos.get();
+    sel.innerHTML = '<option value="">Todos</option>' + mecanicos.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
+}
+
+function aplicarFiltros() {
+    const status = document.getElementById('filtroStatus').value;
+    const mecanicoId = document.getElementById('filtroMecanico').value;
+    const clienteNome = document.getElementById('filtroCliente').value.toLowerCase();
+    const periodo = document.getElementById('filtroPeriodo').value;
+
+    let ags = DB.agendamentos.get();
+    if (status) ags = ags.filter(a => a.status === status);
+    if (mecanicoId) ags = ags.filter(a => a.mecanicoId === Number(mecanicoId));
+    if (clienteNome) ags = ags.filter(a => getNomeCliente(a.clienteId).toLowerCase().includes(clienteNome));
+
+    const hoje = new Date();
+    if (periodo === 'hoje') {
+        const hojeStr = hoje.toDateString();
+        ags = ags.filter(a => new Date(a.dataHora).toDateString() === hojeStr);
+    } else if (periodo === 'semana') {
+        const inicio = new Date(hoje);
+        inicio.setDate(hoje.getDate() - hoje.getDay());
+        const fim = new Date(inicio);
+        fim.setDate(inicio.getDate() + 6);
+        ags = ags.filter(a => {
+            const d = new Date(a.dataHora);
+            return d >= inicio && d <= fim;
+        });
+    } else if (periodo === 'mes') {
+        const mes = hoje.getMonth();
+        const ano = hoje.getFullYear();
+        ags = ags.filter(a => {
+            const d = new Date(a.dataHora);
+            return d.getMonth() === mes && d.getFullYear() === ano;
+        });
+    }
+
+    renderTabelaAgendamentos(ags);
+}
+
+function limparFiltros() {
+    document.getElementById('filtroStatus').value = '';
+    document.getElementById('filtroMecanico').value = '';
+    document.getElementById('filtroCliente').value = '';
+    document.getElementById('filtroPeriodo').value = 'todos';
+    aplicarFiltros();
+}
+
+function renderTabelaAgendamentos(ags) {
+    const tbody = document.getElementById('tabelaAgendamentos');
+    if (!ags.length) { tbody.innerHTML = '<tr><td colspan="8" class="text-muted">Nenhum agendamento.</td></tr>'; return; }
+    tbody.innerHTML = ags.map(a => {
+        const servNomes = (a.servicos || []).map(id => getNomeServico(id)).join(', ') || '-';
+        return `<tr>
+            <td>#${a.id}</td>
+            <td><i class="fas fa-user" style="color:var(--primary);"></i> ${getNomeCliente(a.clienteId)}
+                <button class="btn btn-sm btn-secondary" style="padding:0.1rem 0.5rem; font-size:0.7rem;" onclick="abrirHistorico(${a.clienteId})"><i class="fas fa-history"></i></button>
+            </td>
+            <td><i class="fas fa-car" style="color:var(--secondary);"></i> ${getVeiculoInfo(a.veiculoId)}</td>
+            <td><i class="fas fa-user-cog"></i> ${getNomeMecanico(a.mecanicoId)}</td>
+            <td><i class="far fa-clock"></i> ${formatDate(a.dataHora)}</td>
+            <td>${servNomes}</td>
+            <td><span class="status-badge ${getStatusClass(a.status)}"><i class="fas fa-circle"></i> ${getStatusLabel(a.status)}</span></td>
+            <td>
+                <button class="btn btn-sm btn-secondary" onclick="editarAgendamento(${a.id})"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="excluirAgendamento(${a.id})"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+// ============================================================
+// CALENDÁRIO
+// ============================================================
+let calendarInstance = null;
+function renderizarCalendario() {
+    const el = document.getElementById('calendar');
+    if (calendarInstance) {
+        calendarInstance.destroy();
+        calendarInstance = null;
+    }
+    const ags = DB.agendamentos.get();
+    const events = ags.map(a => ({
+        id: a.id,
+        title: `${getNomeCliente(a.clienteId)} - ${getNomeMecanico(a.mecanicoId)}`,
+        start: a.dataHora,
+        end: a.dataHora ? new Date(new Date(a.dataHora).getTime() + (getDuracaoServicos(a.servicos) || 30) * 60000).toISOString() : null,
+        backgroundColor: getStatusColor(a.status),
+        borderColor: getStatusColor(a.status),
+        extendedProps: { agendamento: a }
+    }));
+    calendarInstance = new FullCalendar.Calendar(el, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: events,
+        eventClick: function(info) {
+            const ag = info.event.extendedProps.agendamento;
+            if (ag) editarAgendamento(ag.id);
+        },
+        editable: false,
+        locale: 'pt-br'
+    });
+    calendarInstance.render();
+}
+
+// ============================================================
+// AGENDAMENTOS (CRUD) - CORREÇÃO DEFINITIVA
+// ============================================================
+
+// ----- FUNÇÕES DE PREENCHIMENTO (COM VERIFICAÇÃO) -----
 function preencherSelectClientes(selectId) {
     const sel = document.getElementById(selectId);
     const clientes = DB.clientes.get();
@@ -309,42 +729,22 @@ function preencherSelectVeiculos(selectId, selectedId = null) {
     const veiculos = DB.veiculos.get();
     let html = '<option value="">Selecione</option>';
     let found = false;
-
-    // Converte selectedId para número para comparação
-    const selectedNum = selectedId !== null ? Number(selectedId) : null;
-    const selectedStr = selectedNum !== null ? String(selectedNum) : null;
-
     veiculos.forEach(v => {
         const val = v.id || 0;
         html += `<option value="${val}">${v.placa} - ${v.modelo}</option>`;
-        if (val === selectedNum) found = true;
+        if (val === selectedId) found = true;
     });
-
-    // Se não encontrou e temos um ID válido, cria uma opção temporária
-    if (selectedNum !== null && !isNaN(selectedNum) && !found) {
-        const veiculo = findById(DB.veiculos.get(), selectedNum);
-        const label = veiculo ? `${veiculo.placa} - ${veiculo.modelo}` : `Veículo #${selectedNum}`;
-        html += `<option value="${selectedNum}" selected>${label}</option>`;
-        found = true; // marcamos como encontrado para selecionar depois
+    // Se o selectedId for fornecido e não existir, cria uma opção temporária
+    if (selectedId !== null && selectedId !== undefined && !found) {
+        const veiculo = findById(DB.veiculos.get(), selectedId);
+        const label = veiculo ? `${veiculo.placa} - ${veiculo.modelo}` : `Veículo #${selectedId}`;
+        html += `<option value="${selectedId}" selected>${label}</option>`;
     }
-
     sel.innerHTML = html;
-
-    // Seleciona o valor se encontrou ou se foi fornecido
-    if (selectedNum !== null && !isNaN(selectedNum)) {
-        sel.value = selectedStr;
-        // Se ainda não selecionou, percorre as opções
-        if (sel.value !== selectedStr) {
-            for (let opt of sel.options) {
-                if (opt.value === selectedStr) {
-                    opt.selected = true;
-                    break;
-                }
-            }
-        }
+    // Forçar a seleção se tiver selectedId
+    if (selectedId !== null && selectedId !== undefined) {
+        sel.value = selectedId;
     }
-
-    console.log('preencherSelectVeiculos - selectedId:', selectedId, 'selectedNum:', selectedNum, 'selectedStr:', selectedStr, 'found:', found, 'html gerado:', html);
 }
 
 function preencherSelectMecanicos(selectId) {
@@ -360,16 +760,15 @@ function preencherSelectServicosMulti(selectId) {
     sel.innerHTML = servicos.map(s => `<option value="${s.id}">${s.nome} (R$ ${s.preco?.toFixed(2)})</option>`).join('');
 }
 
-// ============================================================
-// ABRIR MODAL (com verificação extra)
-// ============================================================
+// ----- ABRIR MODAL (com seleção forçada) -----
 function abrirModalAgendamento(data) {
     document.getElementById('formAgendamento').reset();
     document.getElementById('agendamentoId').value = '';
     document.getElementById('modalAgendamentoTitulo').textContent = 'Novo Agendamento';
 
+    // Preencher todos os selects
     preencherSelectClientes('agCliente');
-    preencherSelectVeiculos('agVeiculo'); // sem seleção
+    preencherSelectVeiculos('agVeiculo'); // sem selectedId
     preencherSelectMecanicos('agMecanico');
     preencherSelectServicosMulti('agServicos');
 
@@ -377,16 +776,12 @@ function abrirModalAgendamento(data) {
         document.getElementById('modalAgendamentoTitulo').textContent = 'Editar Agendamento';
         document.getElementById('agendamentoId').value = data.id;
 
-        // Verifica se veiculoId existe e é válido
-        const veiculoId = data.veiculoId;
-        console.log('Editando agendamento - veiculoId recebido:', veiculoId, 'tipo:', typeof veiculoId);
-
-        // Recarrega os selects com os IDs
+        // Recarregar os selects com os IDs selecionados
         preencherSelectClientes('agCliente');
-        preencherSelectVeiculos('agVeiculo', veiculoId);
+        preencherSelectVeiculos('agVeiculo', data.veiculoId);
         preencherSelectMecanicos('agMecanico');
 
-        // Define os valores
+        // Definir valores
         document.getElementById('agCliente').value = data.clienteId;
         document.getElementById('agMecanico').value = data.mecanicoId || '';
         document.getElementById('agDataHora').value = data.dataHora ? data.dataHora.slice(0,16) : '';
@@ -398,8 +793,8 @@ function abrirModalAgendamento(data) {
             opt.selected = (data.servicos || []).includes(Number(opt.value));
         }
 
-        // Log do valor final do select
-        console.log('Valor final do select veículo:', document.getElementById('agVeiculo').value);
+        console.log('Editando agendamento:', data);
+        console.log('Veículo selecionado após preencher:', document.getElementById('agVeiculo').value);
     } else {
         document.getElementById('agStatus').value = 'pendente';
         const now = new Date();
@@ -409,9 +804,82 @@ function abrirModalAgendamento(data) {
     abrirModal('modalAgendamento');
 }
 
-// ============================================================
-// SALVAR AGENDAMENTO (com validação reforçada)
-// ============================================================
+function editarAgendamento(id) {
+    const a = findById(DB.agendamentos.get(), id);
+    if (a) abrirModalAgendamento(a);
+}
+
+// ===== VALIDAÇÕES =====
+function validarDataHora(dataHora) {
+    if (!dataHora) {
+        showToast('Data e hora são obrigatórias.', 'error');
+        return false;
+    }
+    const selected = new Date(dataHora);
+    const now = new Date();
+    const diff = (selected - now) / 60000;
+    if (diff < -1) {
+        showToast('A data/hora não pode ser no passado. Escolha um horário futuro.', 'error');
+        return false;
+    }
+    const hora = selected.getHours();
+    const minuto = selected.getMinutes();
+    if (hora < 8 || hora >= 18 || (hora === 17 && minuto > 30)) {
+        showToast('Horário deve estar entre 08:00 e 17:30 (último agendamento às 17:30).', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validarPlaca(placa, idIgnorar = null) {
+    let p = placa.replace(/[\s\-\.]/g, '').toUpperCase();
+    if (p.length !== 7) {
+        showToast(`A placa deve ter exatamente 7 caracteres (você digitou ${p.length}). Ex: AAA-0000 ou ABC1D23.`, 'error');
+        return false;
+    }
+    if (!/^[A-Z0-9]{7}$/.test(p)) {
+        showToast('Placa inválida. Use apenas letras e números, sem caracteres especiais.', 'error');
+        return false;
+    }
+    const veiculos = DB.veiculos.get();
+    const duplicado = veiculos.some(v => {
+        const vPlaca = v.placa.replace(/[\s\-\.]/g, '').toUpperCase();
+        return vPlaca === p && v.id !== idIgnorar;
+    });
+    if (duplicado) {
+        showToast('Esta placa já está cadastrada para outro veículo.', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validarTelefone(tel) {
+    if (!tel) return true;
+    const regex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
+    if (!regex.test(tel)) {
+        showToast('Telefone inválido. Use o formato (11) 99999-9999.', 'error');
+        return false;
+    }
+    return true;
+}
+
+function verificarConflito(mecanicoId, dataHora, duracao, agendamentoIdIgnorar = null) {
+    if (!mecanicoId) return false;
+    const ags = DB.agendamentos.get();
+    const inicio = new Date(dataHora);
+    const fim = new Date(inicio.getTime() + duracao * 60000);
+
+    return ags.some(a => {
+        if (a.id === agendamentoIdIgnorar) return false;
+        if (a.mecanicoId !== mecanicoId) return false;
+        if (a.status === 'cancelado' || a.status === 'concluido') return false;
+        const aInicio = new Date(a.dataHora);
+        const aFim = new Date(aInicio.getTime() + (getDuracaoServicos(a.servicos) || 30) * 60000);
+        return (inicio < aFim && fim > aInicio);
+    });
+}
+
+// ===== SALVAR AGENDAMENTO - COM VALIDAÇÃO DE VEÍCULO =====
 function salvarAgendamento(e) {
     e.preventDefault();
 
@@ -432,31 +900,21 @@ function salvarAgendamento(e) {
     const veiculoId = Number(veiculoVal);
     const mecanicoId = Number(mecanicoVal);
 
-    console.log('Salvando - Cliente:', clienteVal, '->', clienteId);
-    console.log('Salvando - Veículo:', veiculoVal, '->', veiculoId);
-    console.log('Salvando - Mecânico:', mecanicoVal, '->', mecanicoId);
-    console.log('Salvando - Data/Hora:', dataHora);
+    // LOGs detalhados
+    console.log('===== SALVANDO AGENDAMENTO =====');
+    console.log('Cliente value:', clienteVal, '->', clienteId);
+    console.log('Veículo value:', veiculoVal, '->', veiculoId);
+    console.log('Mecânico value:', mecanicoVal, '->', mecanicoId);
+    console.log('Data/Hora:', dataHora);
 
-    // --- VALIDAÇÕES EXPLÍCITAS ---
+    // --- VALIDAÇÕES ---
     if (!clienteVal || isNaN(clienteId) || clienteId <= 0) {
         showToast('Selecione um cliente válido.', 'error');
         return;
     }
     if (!veiculoVal || isNaN(veiculoId) || veiculoId <= 0) {
-        // Tenta recuperar o veículo pelo ID (caso seja 0 ou vazio)
-        if (veiculoVal && veiculoVal !== '') {
-            const veiculo = findById(DB.veiculos.get(), Number(veiculoVal));
-            if (veiculo) {
-                console.log('Veículo recuperado pelo ID:', veiculo);
-                // Prossegue, pois o veículo existe
-            } else {
-                showToast('Veículo não encontrado. Selecione um veículo válido.', 'error');
-                return;
-            }
-        } else {
-            showToast('Selecione um veículo válido (ID: ' + veiculoVal + ').', 'error');
-            return;
-        }
+        showToast('Selecione um veículo válido (ID: ' + veiculoVal + ').', 'error');
+        return;
     }
     if (!dataHora || dataHora === '') {
         showToast('Preencha a data e hora.', 'error');
@@ -480,6 +938,7 @@ function salvarAgendamento(e) {
         }
     }
 
+    // --- SALVAR ---
     const ags = DB.agendamentos.get();
     const id = document.getElementById('agendamentoId').value;
 
@@ -523,14 +982,427 @@ function salvarAgendamento(e) {
     if (calendarInstance) renderizarCalendario();
 }
 
+function excluirAgendamento(id) {
+    if (!confirm('Excluir agendamento #' + id + '?')) return;
+    let ags = DB.agendamentos.get();
+    ags = ags.filter(a => a.id !== id);
+    DB.agendamentos.set(ags);
+    aplicarFiltros();
+    atualizarDashboard();
+    if (calendarInstance) renderizarCalendario();
+    showToast('Agendamento excluído.', 'warning');
+}
+
 // ============================================================
-// DEMAIS FUNÇÕES (idênticas ao original, mantidas)
+// HISTÓRICO DO CLIENTE
 // ============================================================
-// (aqui entrariam validarDataHora, validarPlaca, verificarConflito,
-//  excluirAgendamento, abrirHistorico, imprimirAgendaDoDia, etc.)
-// Para não estender demais, mantenha as funções que já existem no seu arquivo.
-// Apenas substitua as funções acima (preencherSelectVeiculos, abrirModalAgendamento, salvarAgendamento)
-// e garanta que o resto permaneça igual.
+function abrirHistorico(clienteId) {
+    const cliente = findById(DB.clientes.get(), clienteId);
+    if (!cliente) { showToast('Cliente não encontrado.', 'error'); return; }
+
+    const veiculos = DB.veiculos.get().filter(v => v.clienteId === clienteId);
+    const agendamentos = DB.agendamentos.get().filter(a => a.clienteId === clienteId);
+
+    let html = `<h4>${cliente.nome}</h4><p><i class="fas fa-phone"></i> ${cliente.telefone || '-'} | <i class="fas fa-envelope"></i> ${cliente.email || '-'}</p>`;
+    html += `<h5 style="margin-top:1rem;"><i class="fas fa-car"></i> Veículos</h5>`;
+    if (veiculos.length) {
+        html += `<ul>${veiculos.map(v => `<li>${v.placa} - ${v.modelo} (${v.ano})</li>`).join('')}</ul>`;
+    } else {
+        html += `<p class="text-muted">Nenhum veículo cadastrado.</p>`;
+    }
+
+    html += `<h5 style="margin-top:1rem;"><i class="fas fa-calendar-check"></i> Agendamentos</h5>`;
+    if (agendamentos.length) {
+        html += `<ul>${agendamentos.map(a => `<li>#${a.id} - ${formatDate(a.dataHora)} - ${getStatusLabel(a.status)} (${getNomeMecanico(a.mecanicoId)})</li>`).join('')}</ul>`;
+    } else {
+        html += `<p class="text-muted">Nenhum agendamento.</p>`;
+    }
+
+    document.getElementById('historicoConteudo').innerHTML = html;
+    abrirModal('modalHistorico');
+}
+
+// ============================================================
+// IMPRESSÃO
+// ============================================================
+function imprimirAgendaDoDia() {
+    const hoje = new Date();
+    const hojeStr = hoje.toDateString();
+    const ags = DB.agendamentos.get().filter(a => new Date(a.dataHora).toDateString() === hojeStr);
+    const printArea = document.getElementById('print-conteudo');
+    if (!ags.length) {
+        printArea.innerHTML = '<p class="text-muted">Nenhum agendamento para hoje.</p>';
+    } else {
+        let html = `<table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead><tr><th>Horário</th><th>Cliente</th><th>Veículo</th><th>Serviços</th><th>Mecânico</th><th>Status</th></tr></thead><tbody>`;
+        ags.sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora));
+        ags.forEach(a => {
+            const servNomes = (a.servicos || []).map(id => getNomeServico(id)).join(', ') || '-';
+            html += `<tr><td>${formatDateShort(a.dataHora)}</td><td>${getNomeCliente(a.clienteId)}</td><td>${getVeiculoInfo(a.veiculoId)}</td><td>${servNomes}</td><td>${getNomeMecanico(a.mecanicoId)}</td><td>${getStatusLabel(a.status)}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        printArea.innerHTML = html;
+    }
+    document.getElementById('print-area').style.display = 'block';
+    setTimeout(() => {
+        window.print();
+        document.getElementById('print-area').style.display = 'none';
+    }, 300);
+}
+
+// ============================================================
+// LEMBRETES
+// ============================================================
+function agendarLembrete(agendamentoId) {
+    const delay = 5000;
+    setTimeout(() => {
+        const ag = findById(DB.agendamentos.get(), agendamentoId);
+        if (!ag || ag.status === 'cancelado') return;
+        const cliente = findById(DB.clientes.get(), ag.clienteId);
+        if (!cliente) return;
+        const lembretes = DB.lembretes.get();
+        if (lembretes.some(l => l.agendamentoId === agendamentoId)) return;
+        const novo = { id: gerarId(lembretes), agendamentoId, tipo: 'email', enviadoEm: new Date().toISOString(), status: 'enviado' };
+        lembretes.push(novo);
+        DB.lembretes.set(lembretes);
+        if (Notification.permission === 'granted') {
+            new Notification('Lembrete de Agendamento', { body: `Cliente ${cliente.nome} - ${formatDate(ag.dataHora)}` });
+        }
+        if (document.getElementById('page-lembretes-log').classList.contains('active')) renderLembretesLog();
+    }, delay);
+}
+
+// ============================================================
+// CLIENTES (CRUD)
+// ============================================================
+function renderClientes() {
+    const list = DB.clientes.get();
+    const tbody = document.getElementById('tabelaClientes');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted">Nenhum cliente.</td></tr>'; return; }
+    tbody.innerHTML = list.map(c => `<tr>
+        <td>#${c.id}</td><td><i class="fas fa-user" style="color:var(--primary);"></i> ${c.nome}</td><td>${c.telefone || '-'}</td><td>${c.email || '-'}</td>
+        <td>
+            <button class="btn btn-sm btn-secondary" onclick="editarCliente(${c.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="excluirCliente(${c.id})"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-sm btn-success" onclick="abrirHistorico(${c.id})"><i class="fas fa-history"></i></button>
+        </td>
+    </tr>`).join('');
+}
+
+function abrirModalCliente(data) {
+    document.getElementById('formCliente').reset();
+    document.getElementById('clienteId').value = '';
+    document.getElementById('modalClienteTitulo').textContent = 'Novo Cliente';
+    if (data) {
+        document.getElementById('modalClienteTitulo').textContent = 'Editar Cliente';
+        document.getElementById('clienteId').value = data.id;
+        document.getElementById('cliNome').value = data.nome;
+        document.getElementById('cliTelefone').value = data.telefone || '';
+        document.getElementById('cliEmail').value = data.email || '';
+        document.getElementById('cliEndereco').value = data.endereco || '';
+    }
+    abrirModal('modalCliente');
+}
+
+function editarCliente(id) { const c = findById(DB.clientes.get(), id); if (c) abrirModalCliente(c); }
+
+function salvarCliente(e) {
+    e.preventDefault();
+    const id = document.getElementById('clienteId').value;
+    const nome = document.getElementById('cliNome').value.trim();
+    if (!nome) { showToast('Nome é obrigatório.', 'error'); return; }
+    const telefone = document.getElementById('cliTelefone').value;
+    if (!validarTelefone(telefone) && telefone) return;
+
+    const list = DB.clientes.get();
+    const obj = { nome, telefone, email: document.getElementById('cliEmail').value, endereco: document.getElementById('cliEndereco').value };
+    if (id) { const idx = list.findIndex(c => c.id === Number(id)); if (idx !== -1) list[idx] = { ...list[idx], ...obj }; }
+    else { obj.id = gerarId(list); list.push(obj); }
+    DB.clientes.set(list);
+    fecharModal('modalCliente');
+    renderClientes();
+    showToast('Cliente salvo com sucesso!', 'success');
+}
+
+function excluirCliente(id) {
+    if (!confirm('Excluir cliente?')) return;
+    let list = DB.clientes.get();
+    list = list.filter(c => c.id !== id);
+    DB.clientes.set(list);
+    renderClientes();
+    showToast('Cliente excluído.', 'warning');
+}
+
+// ============================================================
+// VEÍCULOS
+// ============================================================
+function renderVeiculos() {
+    const list = DB.veiculos.get();
+    const tbody = document.getElementById('tabelaVeiculos');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-muted">Nenhum veículo.</td></tr>'; return; }
+    tbody.innerHTML = list.map(v => `<tr>
+        <td><strong>${v.placa}</strong></td><td>${v.modelo || '-'}</td><td>${v.marca || '-'}</td><td>${v.ano || '-'}</td>
+        <td>${getNomeCliente(v.clienteId)}</td>
+        <td>
+            <button class="btn btn-sm btn-secondary" onclick="editarVeiculo(${v.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="excluirVeiculo(${v.id})"><i class="fas fa-trash"></i></button>
+        </td>
+    </tr>`).join('');
+}
+
+function abrirModalVeiculo(data) {
+    document.getElementById('formVeiculo').reset();
+    document.getElementById('veiculoId').value = '';
+    document.getElementById('modalVeiculoTitulo').textContent = 'Novo Veículo';
+    preencherSelectClientes('veiCliente');
+    if (data) {
+        document.getElementById('modalVeiculoTitulo').textContent = 'Editar Veículo';
+        document.getElementById('veiculoId').value = data.id;
+        document.getElementById('veiCliente').value = data.clienteId;
+        document.getElementById('veiPlaca').value = data.placa;
+        document.getElementById('veiModelo').value = data.modelo || '';
+        document.getElementById('veiMarca').value = data.marca || '';
+        document.getElementById('veiAno').value = data.ano || '';
+        document.getElementById('veiCor').value = data.cor || '';
+        document.getElementById('veiKm').value = data.km || '';
+        document.getElementById('veiObs').value = data.obs || '';
+    }
+    abrirModal('modalVeiculo');
+}
+
+function editarVeiculo(id) { const v = findById(DB.veiculos.get(), id); if (v) abrirModalVeiculo(v); }
+
+function salvarVeiculo(e) {
+    e.preventDefault();
+    const id = document.getElementById('veiculoId').value;
+    let placa = document.getElementById('veiPlaca').value.trim();
+    if (!validarPlaca(placa, id ? Number(id) : null)) return;
+    const placaNormalizada = placa.replace(/[\s\-\.]/g, '').toUpperCase();
+    const clienteId = Number(document.getElementById('veiCliente').value);
+    if (!clienteId) { showToast('Selecione um cliente.', 'error'); return; }
+    const list = DB.veiculos.get();
+    const obj = {
+        placa: placaNormalizada,
+        clienteId,
+        modelo: document.getElementById('veiModelo').value,
+        marca: document.getElementById('veiMarca').value,
+        ano: Number(document.getElementById('veiAno').value) || null,
+        cor: document.getElementById('veiCor').value,
+        km: Number(document.getElementById('veiKm').value) || null,
+        obs: document.getElementById('veiObs').value
+    };
+    if (id) {
+        const idx = list.findIndex(v => v.id === Number(id));
+        if (idx !== -1) list[idx] = { ...list[idx], ...obj };
+    } else {
+        obj.id = gerarId(list);
+        list.push(obj);
+    }
+    DB.veiculos.set(list);
+    fecharModal('modalVeiculo');
+    renderVeiculos();
+    showToast('Veículo salvo com sucesso!', 'success');
+}
+
+function excluirVeiculo(id) {
+    if (!confirm('Excluir veículo?')) return;
+    let list = DB.veiculos.get();
+    list = list.filter(v => v.id !== id);
+    DB.veiculos.set(list);
+    renderVeiculos();
+    showToast('Veículo excluído.', 'warning');
+}
+
+// ============================================================
+// MECÂNICOS
+// ============================================================
+function renderMecanicos() {
+    const list = DB.mecanicos.get();
+    const tbody = document.getElementById('tabelaMecanicos');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted">Nenhum mecânico.</td></tr>'; return; }
+    tbody.innerHTML = list.map(m => `<tr>
+        <td>#${m.id}</td><td><i class="fas fa-user-cog" style="color:var(--primary);"></i> ${m.nome}</td><td>${m.especialidade || '-'}</td><td>${m.telefone || '-'}</td>
+        <td>
+            <button class="btn btn-sm btn-secondary" onclick="editarMecanico(${m.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="excluirMecanico(${m.id})"><i class="fas fa-trash"></i></button>
+        </td>
+    </tr>`).join('');
+}
+
+function abrirModalMecanico(data) {
+    document.getElementById('formMecanico').reset();
+    document.getElementById('mecanicoId').value = '';
+    document.getElementById('modalMecanicoTitulo').textContent = 'Novo Mecânico';
+    if (data) {
+        document.getElementById('modalMecanicoTitulo').textContent = 'Editar Mecânico';
+        document.getElementById('mecanicoId').value = data.id;
+        document.getElementById('mecNome').value = data.nome;
+        document.getElementById('mecEspecialidade').value = data.especialidade || '';
+        document.getElementById('mecTelefone').value = data.telefone || '';
+        document.getElementById('mecEmail').value = data.email || '';
+    }
+    abrirModal('modalMecanico');
+}
+
+function editarMecanico(id) { const m = findById(DB.mecanicos.get(), id); if (m) abrirModalMecanico(m); }
+
+function salvarMecanico(e) {
+    e.preventDefault();
+    const id = document.getElementById('mecanicoId').value;
+    const nome = document.getElementById('mecNome').value.trim();
+    if (!nome) { showToast('Nome é obrigatório.', 'error'); return; }
+    const list = DB.mecanicos.get();
+    const obj = { nome, especialidade: document.getElementById('mecEspecialidade').value, telefone: document.getElementById('mecTelefone').value, email: document.getElementById('mecEmail').value };
+    if (id) { const idx = list.findIndex(m => m.id === Number(id)); if (idx !== -1) list[idx] = { ...list[idx], ...obj }; }
+    else { obj.id = gerarId(list); list.push(obj); }
+    DB.mecanicos.set(list);
+    fecharModal('modalMecanico');
+    renderMecanicos();
+    showToast('Mecânico salvo com sucesso!', 'success');
+}
+
+function excluirMecanico(id) {
+    if (!confirm('Excluir mecânico?')) return;
+    let list = DB.mecanicos.get();
+    list = list.filter(m => m.id !== id);
+    DB.mecanicos.set(list);
+    renderMecanicos();
+    showToast('Mecânico excluído.', 'warning');
+}
+
+// ============================================================
+// SERVIÇOS
+// ============================================================
+function renderServicos() {
+    const list = DB.servicos.get();
+    const tbody = document.getElementById('tabelaServicos');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted">Nenhum serviço.</td></tr>'; return; }
+    tbody.innerHTML = list.map(s => `<tr>
+        <td>#${s.id}</td><td><i class="fas fa-tools" style="color:var(--secondary);"></i> ${s.nome}</td><td>R$ ${s.preco?.toFixed(2) || '0,00'}</td><td>${s.duracao || '-'}</td>
+        <td>
+            <button class="btn btn-sm btn-secondary" onclick="editarServico(${s.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="excluirServico(${s.id})"><i class="fas fa-trash"></i></button>
+        </td>
+    </tr>`).join('');
+}
+
+function abrirModalServico(data) {
+    document.getElementById('formServico').reset();
+    document.getElementById('servicoId').value = '';
+    document.getElementById('modalServicoTitulo').textContent = 'Novo Serviço';
+    if (data) {
+        document.getElementById('modalServicoTitulo').textContent = 'Editar Serviço';
+        document.getElementById('servicoId').value = data.id;
+        document.getElementById('serNome').value = data.nome;
+        document.getElementById('serDescricao').value = data.descricao || '';
+        document.getElementById('serPreco').value = data.preco || '';
+        document.getElementById('serDuracao').value = data.duracao || '';
+    }
+    abrirModal('modalServico');
+}
+
+function editarServico(id) { const s = findById(DB.servicos.get(), id); if (s) abrirModalServico(s); }
+
+function salvarServico(e) {
+    e.preventDefault();
+    const id = document.getElementById('servicoId').value;
+    const nome = document.getElementById('serNome').value.trim();
+    if (!nome) { showToast('Nome é obrigatório.', 'error'); return; }
+    const preco = Number(document.getElementById('serPreco').value) || 0;
+    const list = DB.servicos.get();
+    const obj = { nome, descricao: document.getElementById('serDescricao').value, preco, duracao: Number(document.getElementById('serDuracao').value) || null };
+    if (id) { const idx = list.findIndex(s => s.id === Number(id)); if (idx !== -1) list[idx] = { ...list[idx], ...obj }; }
+    else { obj.id = gerarId(list); list.push(obj); }
+    DB.servicos.set(list);
+    fecharModal('modalServico');
+    renderServicos();
+    showToast('Serviço salvo com sucesso!', 'success');
+}
+
+function excluirServico(id) {
+    if (!confirm('Excluir serviço?')) return;
+    let list = DB.servicos.get();
+    list = list.filter(s => s.id !== id);
+    DB.servicos.set(list);
+    renderServicos();
+    showToast('Serviço excluído.', 'warning');
+}
+
+// ============================================================
+// MEUS AGENDAMENTOS
+// ============================================================
+function renderMeusAgendamentos() {
+    const usuario = getUsuarioLogado();
+    const mecanicos = DB.mecanicos.get();
+    let mecanicoId = null;
+    if (usuario === 'admin') {
+        document.getElementById('meuNomeMecanico').textContent = ' (Admin - todos os agendamentos)';
+        const ags = DB.agendamentos.get();
+        renderTabelaMeus(ags);
+        return;
+    } else {
+        const num = Number(usuario.replace('mec', ''));
+        const mec = mecanicos.find(m => m.id === num);
+        if (mec) { mecanicoId = mec.id; document.getElementById('meuNomeMecanico').textContent = ' - ' + mec.nome; }
+        else { document.getElementById('meuNomeMecanico').textContent = ' (mecânico não encontrado)'; renderTabelaMeus([]); return; }
+    }
+    const ags = DB.agendamentos.get().filter(a => a.mecanicoId === mecanicoId);
+    renderTabelaMeus(ags);
+}
+
+function renderTabelaMeus(ags) {
+    const tbody = document.getElementById('tabelaMeusAgendamentos');
+    if (!ags.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-muted">Nenhum agendamento para você.</td></tr>'; return; }
+    tbody.innerHTML = ags.map(a => {
+        const servNomes = (a.servicos || []).map(id => getNomeServico(id)).join(', ') || '-';
+        const podeEditar = a.status !== 'concluido' && a.status !== 'cancelado';
+        return `<tr>
+            <td>#${a.id}</td>
+            <td><i class="fas fa-user" style="color:var(--primary);"></i> ${getNomeCliente(a.clienteId)}</td>
+            <td><i class="fas fa-car" style="color:var(--secondary);"></i> ${getVeiculoInfo(a.veiculoId)}</td>
+            <td><i class="far fa-clock"></i> ${formatDate(a.dataHora)}</td>
+            <td>${servNomes}</td>
+            <td><span class="status-badge ${getStatusClass(a.status)}"><i class="fas fa-circle"></i> ${getStatusLabel(a.status)}</span></td>
+            <td>
+                ${podeEditar ? `<button class="btn btn-sm btn-secondary" onclick="editarAgendamento(${a.id})"><i class="fas fa-edit"></i></button>` : ''}
+                <button class="btn btn-sm btn-success" onclick="mudarStatusMeuAgendamento(${a.id}, 'em_andamento')"><i class="fas fa-play"></i></button>
+                <button class="btn btn-sm btn-secondary" onclick="mudarStatusMeuAgendamento(${a.id}, 'concluido')"><i class="fas fa-check"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function mudarStatusMeuAgendamento(id, novoStatus) {
+    const ags = DB.agendamentos.get();
+    const idx = ags.findIndex(a => a.id === id);
+    if (idx === -1) return;
+    ags[idx].status = novoStatus;
+    DB.agendamentos.set(ags);
+    renderMeusAgendamentos();
+    atualizarDashboard();
+    if (calendarInstance) renderizarCalendario();
+    showToast(`Status alterado para ${getStatusLabel(novoStatus)}`, 'success');
+}
+
+// ============================================================
+// LEMBRETES LOG
+// ============================================================
+function renderLembretesLog() {
+    const list = DB.lembretes.get();
+    const tbody = document.getElementById('tabelaLembretes');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-muted">Nenhum lembrete enviado.</td></tr>'; return; }
+    tbody.innerHTML = list.map(l => {
+        const ag = findById(DB.agendamentos.get(), l.agendamentoId);
+        const cliente = ag ? getNomeCliente(ag.clienteId) : 'N/A';
+        return `<tr>
+            <td>#${l.agendamentoId}</td>
+            <td>${cliente}</td>
+            <td><i class="fas ${l.tipo === 'email' ? 'fa-envelope' : 'fa-sms'}"></i> ${l.tipo}</td>
+            <td>${formatDate(l.enviadoEm)}</td>
+            <td><span class="status-badge ${l.status === 'enviado' ? 'status-concluido' : 'status-cancelado'}"><i class="fas fa-circle"></i> ${l.status}</span></td>
+        </tr>`;
+    }).join('');
+}
 
 // ============================================================
 // INICIALIZAÇÃO
@@ -547,12 +1419,7 @@ renderServicos();
 renderMeusAgendamentos();
 renderLembretesLog();
 
-console.log('🔧 Sistema de Oficina com correção definitiva do veículo ativado!');
+console.log('🔧 Sistema de Oficina com correção de veículo ativado!');
 </script>
-
-<!-- ===== CONTINUAÇÃO DO HTML (modais, etc.) ===== -->
-<!-- (coloque aqui o restante do HTML que estava depois do script no seu arquivo) -->
-<!-- Como o arquivo é grande, vou assumir que você tem o restante, mas se precisar, posso fornecer o HTML completo -->
-
 </body>
 </html>
