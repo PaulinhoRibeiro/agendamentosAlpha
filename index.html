@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
+        /* ===== ESTILOS (mesmo do anterior) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         :root { --primary: #6C63FF; --primary-dark: #5a52d5; --secondary: #FF6584; --success: #2ecc71; --warning: #f1c40f; --danger: #e74c3c; --bg: #f0f2f5; --card: #ffffff; --text: #2d3748; --text-light: #718096; --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); --shadow-hover: 0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04); --radius: 16px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
@@ -223,10 +224,7 @@
     <!-- CLIENTES -->
     <div id="page-clientes" class="page">
         <div class="card">
-            <div class="card-header">
-                <h2><i class="fas fa-users"></i> Clientes</h2>
-                <button class="btn" onclick="abrirModalCliente()"><i class="fas fa-plus"></i> Novo</button>
-            </div>
+            <div class="card-header"><h2><i class="fas fa-users"></i> Clientes</h2><button class="btn" onclick="abrirModalCliente()"><i class="fas fa-plus"></i> Novo</button></div>
             <div class="table-responsive"><table><thead><tr><th>ID</th><th>Nome</th><th>Telefone</th><th>Email</th><th>Ações</th></tr></thead><tbody id="tabelaClientes"></tbody></table></div>
         </div>
     </div>
@@ -282,47 +280,24 @@
         <form id="formAgendamento" onsubmit="salvarAgendamento(event)">
             <input type="hidden" id="agendamentoId" />
             <div class="form-row">
-                <div class="form-group">
-                    <label><i class="fas fa-user"></i> Cliente</label>
-                    <select id="agCliente" required></select>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-car"></i> Veículo</label>
-                    <div id="veiculoContainer">
-                        <select id="agVeiculo" required style="width:100%;"></select>
-                    </div>
+                <div class="form-group"><label><i class="fas fa-user"></i> Cliente</label><select id="agCliente" required></select></div>
+                <div class="form-group"><label><i class="fas fa-car"></i> Veículo</label>
+                    <select id="agVeiculo" required></select>
                     <input type="hidden" id="agVeiculoHidden" />
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group">
-                    <label><i class="fas fa-user-cog"></i> Mecânico</label>
-                    <select id="agMecanico" required></select>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-clock"></i> Data/Hora</label>
-                    <input type="datetime-local" id="agDataHora" required />
-                </div>
+                <div class="form-group"><label><i class="fas fa-user-cog"></i> Mecânico</label><select id="agMecanico" required></select></div>
+                <div class="form-group"><label><i class="fas fa-clock"></i> Data/Hora</label><input type="datetime-local" id="agDataHora" required /></div>
             </div>
-            <div class="form-group">
-                <label><i class="fas fa-tools"></i> Serviços (múltiplos)</label>
-                <select id="agServicos" multiple style="height:80px;"></select>
-            </div>
+            <div class="form-group"><label><i class="fas fa-tools"></i> Serviços (múltiplos)</label><select id="agServicos" multiple style="height:80px;"></select></div>
             <div class="form-row">
-                <div class="form-group">
-                    <label><i class="fas fa-flag"></i> Status</label>
-                    <select id="agStatus">
-                        <option value="pendente">Pendente</option>
-                        <option value="confirmado">Confirmado</option>
-                        <option value="em_andamento">Em andamento</option>
-                        <option value="concluido">Concluído</option>
-                        <option value="cancelado">Cancelado</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-sticky-note"></i> Observações</label>
-                    <textarea id="agObservacoes" rows="2"></textarea>
-                </div>
+                <div class="form-group"><label><i class="fas fa-flag"></i> Status</label><select id="agStatus">
+                    <option value="pendente">Pendente</option><option value="confirmado">Confirmado</option>
+                    <option value="em_andamento">Em andamento</option><option value="concluido">Concluído</option>
+                    <option value="cancelado">Cancelado</option>
+                </select></div>
+                <div class="form-group"><label><i class="fas fa-sticky-note"></i> Observações</label><textarea id="agObservacoes" rows="2"></textarea></div>
             </div>
             <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
         </form>
@@ -794,26 +769,31 @@ function preencherSelectServicosMulti(selectId) {
 }
 
 // ============================================================
-// AGENDAMENTOS - CRUD COM CORREÇÃO DO VEÍCULO
+// AGENDAMENTOS - CRUD (COM fallback do veículo)
 // ============================================================
+let veiculoOriginal = null; // variável global para guardar o veículo original na edição
+
 function abrirModalAgendamento(data) {
     document.getElementById('formAgendamento').reset();
     document.getElementById('agendamentoId').value = '';
     document.getElementById('modalAgendamentoTitulo').textContent = 'Novo Agendamento';
 
-    const veiculoContainer = document.getElementById('veiculoContainer');
-    const veiculoHidden = document.getElementById('agVeiculoHidden');
-
-    // Preenche selects fixos
     preencherSelectClientes('agCliente');
+    preencherSelectVeiculos('agVeiculo');
     preencherSelectMecanicos('agMecanico');
     preencherSelectServicosMulti('agServicos');
 
+    // Resetar o original
+    veiculoOriginal = null;
+
     if (data) {
-        // EDIÇÃO
         document.getElementById('modalAgendamentoTitulo').textContent = 'Editar Agendamento';
         document.getElementById('agendamentoId').value = data.id;
 
+        // Guarda o veiculoId original
+        veiculoOriginal = data.veiculoId;
+
+        // Preenche os campos
         document.getElementById('agCliente').value = data.clienteId;
         document.getElementById('agMecanico').value = data.mecanicoId || '';
         document.getElementById('agDataHora').value = data.dataHora ? data.dataHora.slice(0,16) : '';
@@ -825,19 +805,21 @@ function abrirModalAgendamento(data) {
             opt.selected = (data.servicos || []).includes(Number(opt.value));
         }
 
-        // Veículo: exibe como texto desabilitado + hidden
-        const veiculo = findById(DB.veiculos.get(), data.veiculoId);
-        const veiculoLabel = veiculo ? `${veiculo.placa} - ${veiculo.modelo}` : `Veículo #${data.veiculoId}`;
-        veiculoContainer.innerHTML = `
-            <input type="text" class="form-control" value="${veiculoLabel}" disabled style="width:100%; padding:0.6rem 1rem; border:2px solid #e2e8f0; border-radius:12px; background:#f3f4f6; color:#4b5563; cursor:not-allowed;" />
-        `;
-        veiculoHidden.value = data.veiculoId;
+        // Tenta selecionar o veículo no select
+        const veiculoSelect = document.getElementById('agVeiculo');
+        veiculoSelect.value = data.veiculoId;
+        // Se não encontrou, adiciona uma opção extra
+        if (veiculoSelect.value !== String(data.veiculoId)) {
+            const veiculo = findById(DB.veiculos.get(), data.veiculoId);
+            const label = veiculo ? `${veiculo.placa} - ${veiculo.modelo}` : `Veículo #${data.veiculoId}`;
+            const opt = document.createElement('option');
+            opt.value = data.veiculoId;
+            opt.text = label;
+            opt.selected = true;
+            veiculoSelect.add(opt);
+        }
+        console.log('Editando veículo original:', veiculoOriginal);
     } else {
-        // NOVO
-        veiculoContainer.innerHTML = `<select id="agVeiculo" required style="width:100%;"></select>`;
-        preencherSelectVeiculos('agVeiculo');
-        veiculoHidden.value = '';
-
         document.getElementById('agStatus').value = 'pendente';
         const now = new Date();
         now.setHours(now.getHours() + 1);
@@ -860,7 +842,7 @@ function validarDataHora(dataHora) {
     const now = new Date();
     const diff = (selected - now) / 60000;
     if (diff < -1) {
-        showToast('A data/hora não pode ser no passado. Escolha um horário futuro.', 'error');
+        showToast('A data/hora não pode ser no passado.', 'error');
         return false;
     }
     const hora = selected.getHours();
@@ -874,20 +856,20 @@ function validarDataHora(dataHora) {
 function validarPlaca(placa, idIgnorar = null) {
     let p = placa.replace(/[\s\-\.]/g, '').toUpperCase();
     if (p.length !== 7) {
-        showToast(`A placa deve ter exatamente 7 caracteres (você digitou ${p.length}). Ex: AAA-0000 ou ABC1D23.`, 'error');
+        showToast(`Placa deve ter 7 caracteres (você digitou ${p.length}).`, 'error');
         return false;
     }
     if (!/^[A-Z0-9]{7}$/.test(p)) {
-        showToast('Placa inválida. Use apenas letras e números, sem caracteres especiais.', 'error');
+        showToast('Placa inválida. Use letras e números.', 'error');
         return false;
     }
     const veiculos = DB.veiculos.get();
     const duplicado = veiculos.some(v => {
-        const vPlaca = v.placa.replace(/[\s\-\.]/g, '').toUpperCase();
-        return vPlaca === p && v.id !== idIgnorar;
+        const vp = v.placa.replace(/[\s\-\.]/g, '').toUpperCase();
+        return vp === p && v.id !== idIgnorar;
     });
     if (duplicado) {
-        showToast('Esta placa já está cadastrada para outro veículo.', 'error');
+        showToast('Placa já cadastrada.', 'error');
         return false;
     }
     return true;
@@ -897,7 +879,7 @@ function validarTelefone(tel) {
     if (!tel) return true;
     const regex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
     if (!regex.test(tel)) {
-        showToast('Telefone inválido. Use o formato (11) 99999-9999.', 'error');
+        showToast('Telefone inválido. Use (11) 99999-9999.', 'error');
         return false;
     }
     return true;
@@ -908,7 +890,6 @@ function verificarConflito(mecanicoId, dataHora, duracao, agendamentoIdIgnorar =
     const ags = DB.agendamentos.get();
     const inicio = new Date(dataHora);
     const fim = new Date(inicio.getTime() + duracao * 60000);
-
     return ags.some(a => {
         if (a.id === agendamentoIdIgnorar) return false;
         if (a.mecanicoId !== mecanicoId) return false;
@@ -923,26 +904,25 @@ function salvarAgendamento(e) {
     e.preventDefault();
 
     const clienteSelect = document.getElementById('agCliente');
+    const veiculoSelect = document.getElementById('agVeiculo');
     const mecanicoSelect = document.getElementById('agMecanico');
     const dataInput = document.getElementById('agDataHora');
     const statusSelect = document.getElementById('agStatus');
     const obsText = document.getElementById('agObservacoes');
     const servicosSelect = document.getElementById('agServicos');
-    const veiculoHidden = document.getElementById('agVeiculoHidden');
 
-    let veiculoId;
-    const veiculoSelect = document.getElementById('agVeiculo');
-    if (veiculoSelect) {
-        // Novo: usa o select
-        veiculoId = Number(veiculoSelect.value);
-    } else {
-        // Edição: usa o hidden
-        veiculoId = Number(veiculoHidden.value);
+    let clienteId = Number(clienteSelect.value);
+    let veiculoId = Number(veiculoSelect.value);
+    let mecanicoId = Number(mecanicoSelect.value);
+    const dataHora = dataInput.value;
+
+    // SE o veiculoId for inválido (0 ou NaN) e temos veiculoOriginal, usa o original
+    if ((!veiculoId || isNaN(veiculoId)) && veiculoOriginal) {
+        veiculoId = veiculoOriginal;
+        console.log('Usando veículo original:', veiculoId);
     }
 
-    const clienteId = Number(clienteSelect.value);
-    const mecanicoId = Number(mecanicoSelect.value);
-    const dataHora = dataInput.value;
+    console.log('Salvando - Cliente:', clienteId, 'Veículo:', veiculoId, 'Mecânico:', mecanicoId);
 
     if (!clienteId || isNaN(clienteId) || clienteId <= 0) {
         showToast('Selecione um cliente válido.', 'error');
@@ -969,7 +949,7 @@ function salvarAgendamento(e) {
         const idEdicao = document.getElementById('agendamentoId').value;
         const conflito = verificarConflito(mecanicoFinal, dataHora, duracao, idEdicao ? Number(idEdicao) : null);
         if (conflito) {
-            showToast('Conflito de horário! Este mecânico já possui um agendamento nesse período.', 'error');
+            showToast('Conflito de horário!', 'error');
             return;
         }
     }
@@ -981,7 +961,7 @@ function salvarAgendamento(e) {
         const idx = ags.findIndex(a => a.id === Number(id));
         if (idx !== -1) {
             ags[idx] = { ...ags[idx], clienteId, veiculoId, mecanicoId: mecanicoFinal, dataHora, status, observacoes, servicos };
-            showToast('Agendamento atualizado com sucesso!', 'success');
+            showToast('Agendamento atualizado!', 'success');
         } else {
             showToast('Agendamento não encontrado.', 'error');
             return;
@@ -990,7 +970,7 @@ function salvarAgendamento(e) {
         const novo = { id: gerarId(ags), clienteId, veiculoId, mecanicoId: mecanicoFinal, dataHora, status, observacoes, servicos };
         ags.push(novo);
         if (status !== 'cancelado') agendarLembrete(novo.id);
-        showToast('Agendamento criado com sucesso!', 'success');
+        showToast('Agendamento criado!', 'success');
     }
     DB.agendamentos.set(ags);
     fecharModal('modalAgendamento');
@@ -1065,7 +1045,7 @@ function salvarCliente(e) {
     DB.clientes.set(list);
     fecharModal('modalCliente');
     renderClientes();
-    showToast('Cliente salvo com sucesso!', 'success');
+    showToast('Cliente salvo!', 'success');
 }
 
 function excluirCliente(id) {
@@ -1146,7 +1126,7 @@ function salvarVeiculo(e) {
     DB.veiculos.set(list);
     fecharModal('modalVeiculo');
     renderVeiculos();
-    showToast('Veículo salvo com sucesso!', 'success');
+    showToast('Veículo salvo!', 'success');
 }
 
 function excluirVeiculo(id) {
@@ -1209,7 +1189,7 @@ function salvarMecanico(e) {
     DB.mecanicos.set(list);
     fecharModal('modalMecanico');
     renderMecanicos();
-    showToast('Mecânico salvo com sucesso!', 'success');
+    showToast('Mecânico salvo!', 'success');
 }
 
 function excluirMecanico(id) {
@@ -1273,7 +1253,7 @@ function salvarServico(e) {
     DB.servicos.set(list);
     fecharModal('modalServico');
     renderServicos();
-    showToast('Serviço salvo com sucesso!', 'success');
+    showToast('Serviço salvo!', 'success');
 }
 
 function excluirServico(id) {
@@ -1293,7 +1273,7 @@ function renderMeusAgendamentos() {
     const mecanicos = DB.mecanicos.get();
     let mecanicoId = null;
     if (usuario === 'admin') {
-        document.getElementById('meuNomeMecanico').textContent = ' (Admin - todos os agendamentos)';
+        document.getElementById('meuNomeMecanico').textContent = ' (Admin - todos)';
         const ags = DB.agendamentos.get();
         renderTabelaMeus(ags);
         return;
@@ -1301,7 +1281,7 @@ function renderMeusAgendamentos() {
         const num = Number(usuario.replace('mec', ''));
         const mec = mecanicos.find(m => m.id === num);
         if (mec) { mecanicoId = mec.id; document.getElementById('meuNomeMecanico').textContent = ' - ' + mec.nome; }
-        else { document.getElementById('meuNomeMecanico').textContent = ' (mecânico não encontrado)'; renderTabelaMeus([]); return; }
+        else { document.getElementById('meuNomeMecanico').textContent = ' (não encontrado)'; renderTabelaMeus([]); return; }
     }
     const ags = DB.agendamentos.get().filter(a => a.mecanicoId === mecanicoId);
     renderTabelaMeus(ags);
@@ -1342,7 +1322,7 @@ function mudarStatusMeuAgendamento(id, novoStatus) {
 }
 
 // ============================================================
-// HISTÓRICO DO CLIENTE
+// HISTÓRICO
 // ============================================================
 function abrirHistorico(clienteId) {
     const cliente = findById(DB.clientes.get(), clienteId);
@@ -1355,7 +1335,7 @@ function abrirHistorico(clienteId) {
     if (veiculos.length) {
         html += `<ul>${veiculos.map(v => `<li>${v.placa} - ${v.modelo} (${v.ano})</li>`).join('')}</ul>`;
     } else {
-        html += `<p class="text-muted">Nenhum veículo cadastrado.</p>`;
+        html += `<p class="text-muted">Nenhum veículo.</p>`;
     }
     html += `<h5 style="margin-top:1rem;"><i class="fas fa-calendar-check"></i> Agendamentos</h5>`;
     if (agendamentos.length) {
@@ -1376,7 +1356,7 @@ function imprimirAgendaDoDia() {
     const ags = DB.agendamentos.get().filter(a => new Date(a.dataHora).toDateString() === hojeStr);
     const printArea = document.getElementById('print-conteudo');
     if (!ags.length) {
-        printArea.innerHTML = '<p class="text-muted">Nenhum agendamento para hoje.</p>';
+        printArea.innerHTML = '<p class="text-muted">Nenhum agendamento hoje.</p>';
     } else {
         let html = `<table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;font-size:14px;">
             <thead><tr><th>Horário</th><th>Cliente</th><th>Veículo</th><th>Serviços</th><th>Mecânico</th><th>Status</th></tr></thead><tbody>`;
@@ -1411,7 +1391,7 @@ function agendarLembrete(agendamentoId) {
         lembretes.push(novo);
         DB.lembretes.set(lembretes);
         if (Notification.permission === 'granted') {
-            new Notification('Lembrete de Agendamento', { body: `Cliente ${cliente.nome} - ${formatDate(ag.dataHora)}` });
+            new Notification('Lembrete', { body: `Cliente ${cliente.nome} - ${formatDate(ag.dataHora)}` });
         }
         if (document.getElementById('page-lembretes-log').classList.contains('active')) renderLembretesLog();
     }, delay);
@@ -1452,7 +1432,7 @@ renderServicos();
 renderMeusAgendamentos();
 renderLembretesLog();
 
-console.log('🔧 Sistema de Oficina restaurado e corrigido!');
+console.log('🔧 Sistema de Oficina com fallback de veículo ativado!');
 </script>
 </body>
 </html>
