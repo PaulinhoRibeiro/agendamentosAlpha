@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        /* ===== ESTILOS (mesmo do anterior) ===== */
+        /* (mesmo CSS – mantido igual) */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         :root { --primary: #6C63FF; --primary-dark: #5a52d5; --secondary: #FF6584; --success: #2ecc71; --warning: #f1c40f; --danger: #e74c3c; --bg: #f0f2f5; --card: #ffffff; --text: #2d3748; --text-light: #718096; --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); --shadow-hover: 0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04); --radius: 16px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
@@ -280,24 +280,47 @@
         <form id="formAgendamento" onsubmit="salvarAgendamento(event)">
             <input type="hidden" id="agendamentoId" />
             <div class="form-row">
-                <div class="form-group"><label><i class="fas fa-user"></i> Cliente</label><select id="agCliente" required></select></div>
-                <div class="form-group"><label><i class="fas fa-car"></i> Veículo</label>
-                    <select id="agVeiculo" required></select>
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Cliente</label>
+                    <select id="agCliente" required></select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-car"></i> Veículo</label>
+                    <div id="veiculoContainer">
+                        <!-- Aqui será inserido dinamicamente: select ou input disabled -->
+                    </div>
                     <input type="hidden" id="agVeiculoHidden" />
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label><i class="fas fa-user-cog"></i> Mecânico</label><select id="agMecanico" required></select></div>
-                <div class="form-group"><label><i class="fas fa-clock"></i> Data/Hora</label><input type="datetime-local" id="agDataHora" required /></div>
+                <div class="form-group">
+                    <label><i class="fas fa-user-cog"></i> Mecânico</label>
+                    <select id="agMecanico" required></select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-clock"></i> Data/Hora</label>
+                    <input type="datetime-local" id="agDataHora" required />
+                </div>
             </div>
-            <div class="form-group"><label><i class="fas fa-tools"></i> Serviços (múltiplos)</label><select id="agServicos" multiple style="height:80px;"></select></div>
+            <div class="form-group">
+                <label><i class="fas fa-tools"></i> Serviços (múltiplos)</label>
+                <select id="agServicos" multiple style="height:80px;"></select>
+            </div>
             <div class="form-row">
-                <div class="form-group"><label><i class="fas fa-flag"></i> Status</label><select id="agStatus">
-                    <option value="pendente">Pendente</option><option value="confirmado">Confirmado</option>
-                    <option value="em_andamento">Em andamento</option><option value="concluido">Concluído</option>
-                    <option value="cancelado">Cancelado</option>
-                </select></div>
-                <div class="form-group"><label><i class="fas fa-sticky-note"></i> Observações</label><textarea id="agObservacoes" rows="2"></textarea></div>
+                <div class="form-group">
+                    <label><i class="fas fa-flag"></i> Status</label>
+                    <select id="agStatus">
+                        <option value="pendente">Pendente</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="em_andamento">Em andamento</option>
+                        <option value="concluido">Concluído</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-sticky-note"></i> Observações</label>
+                    <textarea id="agObservacoes" rows="2"></textarea>
+                </div>
             </div>
             <button type="submit" class="btn"><i class="fas fa-save"></i> Salvar</button>
         </form>
@@ -769,29 +792,25 @@ function preencherSelectServicosMulti(selectId) {
 }
 
 // ============================================================
-// AGENDAMENTOS - CRUD (COM fallback do veículo)
+// AGENDAMENTOS - CRUD (SOLUÇÃO DEFINITIVA)
 // ============================================================
-let veiculoOriginal = null; // variável global para guardar o veículo original na edição
-
 function abrirModalAgendamento(data) {
     document.getElementById('formAgendamento').reset();
     document.getElementById('agendamentoId').value = '';
     document.getElementById('modalAgendamentoTitulo').textContent = 'Novo Agendamento';
 
+    const veiculoContainer = document.getElementById('veiculoContainer');
+    const veiculoHidden = document.getElementById('agVeiculoHidden');
+
+    // Preenche selects fixos
     preencherSelectClientes('agCliente');
-    preencherSelectVeiculos('agVeiculo');
     preencherSelectMecanicos('agMecanico');
     preencherSelectServicosMulti('agServicos');
 
-    // Resetar o original
-    veiculoOriginal = null;
-
     if (data) {
+        // EDIÇÃO
         document.getElementById('modalAgendamentoTitulo').textContent = 'Editar Agendamento';
         document.getElementById('agendamentoId').value = data.id;
-
-        // Guarda o veiculoId original
-        veiculoOriginal = data.veiculoId;
 
         // Preenche os campos
         document.getElementById('agCliente').value = data.clienteId;
@@ -805,21 +824,21 @@ function abrirModalAgendamento(data) {
             opt.selected = (data.servicos || []).includes(Number(opt.value));
         }
 
-        // Tenta selecionar o veículo no select
-        const veiculoSelect = document.getElementById('agVeiculo');
-        veiculoSelect.value = data.veiculoId;
-        // Se não encontrou, adiciona uma opção extra
-        if (veiculoSelect.value !== String(data.veiculoId)) {
-            const veiculo = findById(DB.veiculos.get(), data.veiculoId);
-            const label = veiculo ? `${veiculo.placa} - ${veiculo.modelo}` : `Veículo #${data.veiculoId}`;
-            const opt = document.createElement('option');
-            opt.value = data.veiculoId;
-            opt.text = label;
-            opt.selected = true;
-            veiculoSelect.add(opt);
-        }
-        console.log('Editando veículo original:', veiculoOriginal);
+        // Veículo: exibe como texto desabilitado + hidden
+        const veiculo = findById(DB.veiculos.get(), data.veiculoId);
+        const veiculoLabel = veiculo ? `${veiculo.placa} - ${veiculo.modelo}` : `Veículo #${data.veiculoId}`;
+        veiculoContainer.innerHTML = `
+            <input type="text" class="form-control" value="${veiculoLabel}" disabled style="width:100%; padding:0.6rem 1rem; border:2px solid #e2e8f0; border-radius:12px; background:#f3f4f6; color:#4b5563; cursor:not-allowed;" />
+        `;
+        veiculoHidden.value = data.veiculoId;
+
+        console.log('Editando - veiculoId:', data.veiculoId);
     } else {
+        // NOVO
+        veiculoContainer.innerHTML = `<select id="agVeiculo" required style="width:100%;"></select>`;
+        preencherSelectVeiculos('agVeiculo');
+        veiculoHidden.value = '';
+
         document.getElementById('agStatus').value = 'pendente';
         const now = new Date();
         now.setHours(now.getHours() + 1);
@@ -904,23 +923,27 @@ function salvarAgendamento(e) {
     e.preventDefault();
 
     const clienteSelect = document.getElementById('agCliente');
-    const veiculoSelect = document.getElementById('agVeiculo');
     const mecanicoSelect = document.getElementById('agMecanico');
     const dataInput = document.getElementById('agDataHora');
     const statusSelect = document.getElementById('agStatus');
     const obsText = document.getElementById('agObservacoes');
     const servicosSelect = document.getElementById('agServicos');
+    const veiculoHidden = document.getElementById('agVeiculoHidden');
 
-    let clienteId = Number(clienteSelect.value);
-    let veiculoId = Number(veiculoSelect.value);
-    let mecanicoId = Number(mecanicoSelect.value);
-    const dataHora = dataInput.value;
-
-    // SE o veiculoId for inválido (0 ou NaN) e temos veiculoOriginal, usa o original
-    if ((!veiculoId || isNaN(veiculoId)) && veiculoOriginal) {
-        veiculoId = veiculoOriginal;
-        console.log('Usando veículo original:', veiculoId);
+    // OBTÉM O VEÍCULO DE FORMA SEGURA
+    let veiculoId;
+    const veiculoSelect = document.getElementById('agVeiculo');
+    if (veiculoSelect) {
+        // NOVO: usa o select
+        veiculoId = Number(veiculoSelect.value);
+    } else {
+        // EDIÇÃO: usa o hidden
+        veiculoId = Number(veiculoHidden.value);
     }
+
+    const clienteId = Number(clienteSelect.value);
+    const mecanicoId = Number(mecanicoSelect.value);
+    const dataHora = dataInput.value;
 
     console.log('Salvando - Cliente:', clienteId, 'Veículo:', veiculoId, 'Mecânico:', mecanicoId);
 
@@ -1432,7 +1455,7 @@ renderServicos();
 renderMeusAgendamentos();
 renderLembretesLog();
 
-console.log('🔧 Sistema de Oficina com fallback de veículo ativado!');
+console.log('🔧 Sistema de Oficina com solução definitiva ativado!');
 </script>
 </body>
 </html>
